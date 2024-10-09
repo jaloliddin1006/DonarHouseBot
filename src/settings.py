@@ -29,10 +29,6 @@ ALLOWED_HOSTS = ['*']
 
 INTERNAL_IPS = [
     "127.0.0.1",
-    "172.16.13.50",
-    "172.20.1.254",
-    "0.0.0.0",
-    "10.42.0.125"
 ]
 
 TESTING = True
@@ -40,6 +36,7 @@ TESTING = True
 
 INSTALLED_APPS = [
     "debug_toolbar",
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -139,6 +136,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -161,3 +166,11 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
     'debug_toolbar.panels.profiling.ProfilingPanel',
 ]
+
+from src.jazzmin_conf import *
+
+if TESTING:
+    JAZZMIN_SETTINGS['show_ui_builder'] = True
+else:
+    JAZZMIN_SETTINGS['show_ui_builder'] = False
+    
