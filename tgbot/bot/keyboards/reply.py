@@ -42,3 +42,24 @@ maxsus_btn = ReplyKeyboardMarkup(
 )
 
 rmk = ReplyKeyboardRemove()
+
+
+location_btn = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="📍 Geo-Manzilni yuborish", request_location=True),
+        ],
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)
+
+phone_btn = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="☎️ Telefon raqamni yuborish", request_contact=True),
+        ],
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True,
+)

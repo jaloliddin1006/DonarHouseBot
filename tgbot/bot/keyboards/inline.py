@@ -13,19 +13,28 @@ ssilki_kb = InlineKeyboardMarkup(
 main_btn = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton("Menu", callback_data="categories"),
+            InlineKeyboardButton(text="Menu", callback_data="categories"),
         ],
         [
-            InlineKeyboardButton("Biz haqimizda", callback_data="aboutus"),
-            InlineKeyboardButton("Buyurtmalarim", callback_data="myorders"),
+            InlineKeyboardButton(text="Biz haqimizda", callback_data="aboutus"),
+            InlineKeyboardButton(text="Buyurtmalarim", callback_data="myorders"),
         ],
         [
-            InlineKeyboardButton("Filiallar", callback_data="branches"),
+            InlineKeyboardButton(text="Filiallar", callback_data="branches"),
         ],
         [
-            InlineKeyboardButton("Fikr bildirish", callback_data="comment"),
-            InlineKeyboardButton("Sozlamalarim", callback_data="settings"),
+            InlineKeyboardButton(text="Fikr bildirish", callback_data="comment"),
+            InlineKeyboardButton(text="Sozlamalarim", callback_data="settings"),
         ],
     ]
 )
 
+language_btn = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="uz"),
+            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="ru"),
+            InlineKeyboardButton(text="🇺🇸 English", callback_data="en"),
+        ],
+    ]
+)

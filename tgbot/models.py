@@ -16,6 +16,7 @@ class User(BaseModel):
     telegram_id = models.PositiveBigIntegerField(unique=True)
     full_name = models.CharField(max_length=255)
     username = models.CharField(max_length=128, null=True)
+    language_code = models.CharField(max_length=10, null=True, default="uz")
     phone = models.CharField(max_length=50, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)

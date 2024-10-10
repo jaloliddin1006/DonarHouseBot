@@ -6,8 +6,8 @@ from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, Abou
 
 @admin.register(TelegramUser)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "telegram_id", 'is_active', 'created_at')
-    fields = ("full_name", "username", "telegram_id", )
+    list_display = ("id", "full_name", "username", "telegram_id", "language_code", "phone", 'is_active', 'created_at')
+    fields = ("full_name", "username", "telegram_id", "language_code", "phone", "address", "location", "is_active")
     search_fields = ("full_name", "username", "telegram_id", )
     list_per_page = 50
 
