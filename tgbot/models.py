@@ -145,3 +145,17 @@ class OrderItem(BaseModel):
     @property
     def total_price(self):
         return self.product.price * self.quantity
+
+
+class PromoCodes(BaseModel):
+    code = models.CharField(max_length=50, unique=True)
+    description = models.TextField(null=True, blank=True, verbose_name="Tavsif (ixtiyoriy)")
+    discount = models.PositiveIntegerField(default=0, verbose_name="Chegirma (-so'mda)")
+    start_time = models.DateTimeField(auto_now=True, verbose_name="Chegirmaning boshlanish vaqti")
+    end_time = models.DateTimeField(verbose_name="Chegirmaning tugash vaqti")
+    
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        db_table = "promo_codes"

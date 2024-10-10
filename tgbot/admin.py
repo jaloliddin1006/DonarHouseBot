@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
-from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem
+from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem, PromoCodes
 
 
 @admin.register(TelegramUser)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "telegram_id", 'is_active')
+    list_display = ("id", "full_name", "username", "telegram_id", 'is_active', 'created_at')
     fields = ("full_name", "username", "telegram_id", )
     search_fields = ("full_name", "username", "telegram_id", )
     list_per_page = 50
@@ -88,9 +88,7 @@ class AboutAdmin(admin.ModelAdmin):
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'phone', 'address', 'working_hours', 'is_active')
-    list_editable = ('is_active',)
     list_display_links = ('id', 'name')
-    list_per_page = 50
     
 
 class OrderItemInline(admin.TabularInline):
@@ -109,3 +107,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     list_per_page = 50
     search_fields = ('user__full_name', 'user__username', 'user__telegram_id')
+    
+
+@admin.register(PromoCodes)
+class PromoCodesAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'discount', 'is_active', 'created_at', 'end_time')
+    list_display_links = ('id', 'code')
+    list_per_page = 50
+    search_fields = ('code', 'discount')
