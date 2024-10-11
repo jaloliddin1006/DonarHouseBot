@@ -40,23 +40,43 @@ router = Router()
 #     await message.answer("Telefon raqamingizni kiriting", reply_markup=reply.get_phone_btn())
     
     
-@router.callback_query(F.data=="categories") 
+@router.callback_query(F.data == "categories") 
 async def categories(call: types.CallbackQuery, state=FSMContext):
-    categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
     await call.message.delete()
-    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories))
+    categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
+    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_{0}"))
 
 @router.callback_query(F.data.startswith("category_"))
 async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
     category_id = int(call.data.split("_")[1])
     await call.message.delete()
+    if category_id == 0:
+        await call.message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? ", reply_markup=inline.main_btn)
+        return True
+    
     sub_categories = await sync_to_async(list)(Category.objects.sub_ctg(id=category_id))
-    if sub_categories:
-        await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(sub_categories))
-    else:
-        products = await sync_to_async(list)(Product.objects.filter(category_id=category_id))
-        await call.message.answer("Maxsulotlardan birini tanlang", reply_markup=builders.get_products_btn(products))
+    category = await Category.objects.aget(id=category_id)
         
+    photo = FSInputFile(category.image.path)  
+    if sub_categories:
+        if sub_categories[0].level == 1:
+            await call.message.answer_photo(photo=photo, caption="Sub Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(sub_categories, f"categories"))
+        else:
+            await call.message.answer_photo(photo=photo, caption="Sub kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(sub_categories, f"category_{sub_categories[0].parent_id}"))
+        return True
+    
+    products = await sync_to_async(list)(Product.objects.get_ctg_products(category_id=category_id))
+    if products:
+        if products[0].get("category__parent_id"):
+            await call.message.answer_photo(photo=photo, caption="Maxsulotlardan birini tanlang", reply_markup=builders.get_products_btn(products, f"category_{products[0].get('category__parent_id')}"))
+        else:
+            await call.message.answer_photo(photo=photo, caption="Maxsulotlardan birini tanlang", reply_markup=builders.get_products_btn(products, f"categories"))
+        return True
+    
+    await call.answer("Maxsulotlar topilmadi")
+    categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
+    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_{0}"))
+
 
 @router.callback_query(F.data.startswith("product_"))
 async def get_product(call: types.CallbackQuery, state=FSMContext):
@@ -69,8 +89,10 @@ async def get_product(call: types.CallbackQuery, state=FSMContext):
     if product.image:
         try:
             photo = FSInputFile(product.image.path)  
-            await call.message.answer_photo(photo=photo, caption=caption, reply_markup=fabrics.value_compressor(1, product.id))
+            await call.message.answer_photo(photo=photo, caption=caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
         except Exception as error:
-            await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id))
+            await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
     else:
-        await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id))
+        await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
+        
+     

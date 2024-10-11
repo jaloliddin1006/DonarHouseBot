@@ -33,16 +33,17 @@ def check_channel_sub(channels: list):
     return builder.as_markup()
 
 
-def get_categories_btn(categories: list):
+def get_categories_btn(categories: list, back: str):
     builder = InlineKeyboardBuilder()
+    len_ = len(categories)
     [builder.button(text=category.name, callback_data=f"category_{category.id}") for category in categories]
-    builder.button(text="⬅️ Asosiy menyu", callback_data="main_menu")
-    builder.adjust(*[2], 1)  
+    builder.button(text="⬅️ Ortga", callback_data=back)
+    builder.adjust(*[2]*(len_//2), 1)  
     return builder.as_markup()
 
-def get_products_btn(products: list):
+def get_products_btn(products: list, back: str):
     builder = InlineKeyboardBuilder()
-    [builder.button(text=product.name, callback_data=f"product_{product.id}") for product in products]
-    builder.button(text="⬅️ Kategoriyalar", callback_data="categories")
+    [builder.button(text=product.get('name'), callback_data=f"product_{product.get('id')}") for product in products]
+    builder.button(text="⬅️ Ortga", callback_data=back)
     builder.adjust(*[2], 1)  
     return builder.as_markup()

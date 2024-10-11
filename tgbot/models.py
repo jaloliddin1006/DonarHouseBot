@@ -1,7 +1,7 @@
 from django.db import models
 from ckeditor.fields import RichTextField
 from mptt.models import MPTTModel, TreeForeignKey
-from tgbot.managers import CategoryManager
+from tgbot.managers import CategoryManager, ProductManager
 
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -91,6 +91,8 @@ class Product(BaseModel):
     image = models.ImageField(upload_to='products', null=True, blank=True, verbose_name="Rasm")
     description = models.TextField(null=True, blank=True, verbose_name="Tavsif")
     discount = models.PositiveIntegerField(default=0, verbose_name="Chegirma (%)")
+    
+    objects = ProductManager()
 
     def __str__(self):
         return self.name

@@ -28,5 +28,6 @@ async def pagination_handler(call: CallbackQuery, callback_data: fabrics.Product
     caption += f"{STICERS[count]} x {product.price} = {product.price*count} so'm"
     # print(caption)
     with suppress(TelegramBadRequest):
-        await call.message.edit_caption(caption=caption, reply_markup=fabrics.value_compressor(count, pro_id=product_id))
+        await call.message.edit_caption(caption=caption, reply_markup=fabrics.value_compressor(count, pro_id=product_id, ctg_id=product.category_id))
     # await call.answer("xatolik!!", show_alert=True)
+    

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from mptt.admin import DraggableMPTTAdmin
+from tgbot.forms import ProductAdminForm
 from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem, PromoCodes
 
 
@@ -66,6 +67,7 @@ class CategoryAdmin(DraggableMPTTAdmin):
     
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    form = ProductAdminForm
     list_display = ('id', 'name', 'category', 'price', 'is_active')
     list_editable = ('is_active',)
     list_display_links = ('id', 'name')
