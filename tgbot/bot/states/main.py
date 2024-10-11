@@ -12,3 +12,11 @@ class RegistrationState(StatesGroup):
     phone = State()
     code = State()
     name = State()
+    
+
+class CreateOrderState(StatesGroup):
+    delivery_type = State()
+    address = State()
+    phone = State()
+    comment = State()
+    confirm = State()

@@ -1,7 +1,7 @@
 from django.db import models
 from ckeditor.fields import RichTextField
 from mptt.models import MPTTModel, TreeForeignKey
-
+from tgbot.managers import CategoryManager
 
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,11 +74,14 @@ class Category(MPTTModel, BaseModel):
     description = models.TextField(null=True, blank=True, verbose_name="Tavsif")
     parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
 
+    objects = CategoryManager()
+    
     class Meta:
         db_table = "categories"
         
     def __str__(self):
         return self.name
+    
 
 
 class Product(BaseModel):
@@ -109,7 +112,9 @@ class Order(BaseModel):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     delivery = models.CharField(max_length=50, choices=DELIVERY_TYPES, default="pickup")
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="orders")
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="orders")
+    address = models.TextField(verbose_name="Manzil", null=True, blank=True)
+    location = models.CharField(max_length=255, verbose_name="Lokatsiya (Yandex Maps Link)", null=True, blank=True)
     full_name = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=ORDER_STATUSES, default="active")
     is_paid = models.BooleanField(default=False)
@@ -125,6 +130,9 @@ class Order(BaseModel):
     def save(self, *args, **kwargs):
         if not self.pk and not self.full_name:
             self.full_name = self.user.full_name
+        
+        if not self.location and self.address==self.user.address:
+            self.location = self.user.location
         super(Order, self).save(*args, **kwargs)
     
     @property
