@@ -1,7 +1,7 @@
 from django.db import models
 from ckeditor.fields import RichTextField
 from mptt.models import MPTTModel, TreeForeignKey
-from tgbot.managers import CategoryManager, ProductManager
+from tgbot.managers import CategoryManager, OrderItemManager, OrderManager, ProductManager
 
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -118,10 +118,12 @@ class Order(BaseModel):
     address = models.TextField(verbose_name="Manzil", null=True, blank=True)
     location = models.CharField(max_length=255, verbose_name="Lokatsiya (Yandex Maps Link)", null=True, blank=True)
     full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, choices=ORDER_STATUSES, default="active")
     is_paid = models.BooleanField(default=False)
     total_paid_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
+    objects = OrderManager()
 
     class Meta:
         db_table = "orders"
@@ -146,9 +148,11 @@ class OrderItem(BaseModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    
+    objects = OrderItemManager()
 
     def __str__(self):
-        return f"{self.product} - {self.quantity}"
+        return f"{self.pk} - {self.quantity}"
 
     class Meta:
         db_table = "order_items"

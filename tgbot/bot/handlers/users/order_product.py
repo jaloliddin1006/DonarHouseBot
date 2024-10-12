@@ -8,7 +8,7 @@ from aiogram.filters.state import StateFilter
 from asgiref.sync import sync_to_async
 from tgbot.utils import get_address
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
-from tgbot.models import User, Category, Product
+from tgbot.models import User, Category, Product, Order, OrderItem
 from tgbot.bot.loader import bot
 from tgbot.bot.states.main import CreateOrderState
 from PIL import Image
@@ -95,4 +95,57 @@ async def get_product(call: types.CallbackQuery, state=FSMContext):
     else:
         await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
         
-     
+
+@router.callback_query(fabrics.ProductValue.filter(F.action.in_(['addcart'])))
+async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValue):
+    await call.answer()
+    quantity = int(callback_data.count)
+    product_id = int(callback_data.product_id)
+    # action = callback_data.action
+    
+    user = await sync_to_async(User.objects.get)(telegram_id=call.from_user.id)
+    userOrder, created = await sync_to_async(Order.objects.get_or_create)(user=user, status="active")
+    await userOrder.asave()
+    
+    product = await sync_to_async(Product.objects.get)(id=product_id)
+    orderItem, created = await sync_to_async(OrderItem.objects.get_or_create)(order=userOrder, product=product, defaults={"quantity": quantity})
+    # orderItem.quantity = quantity
+    await orderItem.asave()
+    
+    await call.message.answer(f"'{product.name}' dan {quantity} tasi  savatga qo'shildi")
+    await categories(call, state=FSMContext)
+
+
+@router.callback_query(F.data == "mycart")
+async def my_cart(call: types.CallbackQuery, state=FSMContext):
+    user_tg_id = call.from_user.id
+    await call.message.delete()
+    
+    user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
+    userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
+    
+    if not userOrder:
+        await call.message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        return True
+    
+    orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
+    
+    if not orderItems:
+        await call.message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        return True
+        
+    total_price = 0
+    text = "Sizning Savatingizda: \n\n"
+    for index, item in enumerate(orderItems, 1):
+        text += f"""{index}. {item.get("product__name")} dan\n """
+        text += f"""|>  {item.get("product__price")} * {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
+        total_price += item.get("total_price")
+        
+    text += f"Jami: {total_price} so'm"
+    
+    await call.message.answer(text, reply_markup=inline.cart_btn(empty=False))
+        
+
+
+    
+    

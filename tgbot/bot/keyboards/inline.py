@@ -17,7 +17,7 @@ main_btn = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(text="ℹ️ Biz haqimizda", callback_data="aboutus"),
-            InlineKeyboardButton(text="🛍 Buyurtmalarim", callback_data="myorders"),
+            InlineKeyboardButton(text="🛍 Savatcha", callback_data="mycart"),
         ],
         [
             InlineKeyboardButton(text="📍 Filiallar", callback_data="branches"),
@@ -38,3 +38,33 @@ language_btn = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+def cart_btn(empty=True):
+    if empty:
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
+                ],
+                [
+                    InlineKeyboardButton(text="⬅️ Ortga", callback_data="main"),
+                ],
+            ]
+        )
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🔄 Maxsulotlarni o'zgartirish", callback_data="changeproducts"),
+            ],
+            [
+                InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
+            ],
+            [
+                InlineKeyboardButton(text="💳 To'lov qilish", callback_data="payToOrder"),
+            ],
+            [
+                InlineKeyboardButton(text="⬅️ Ortga", callback_data="main"),
+            ],
+        ]
+    )
