@@ -107,7 +107,7 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     inlines = (OrderItemInline,)
-    list_display = ('id', 'user', 'status', 'total_price', 'created_at')
+    list_display = ('id', 'user', 'is_all_order_info_filled', 'status', 'total_price', 'is_paid', 'payment_id', 'created_at')
     list_display_links = ('id', 'user')
     list_filter = ('status',)
     list_per_page = 50

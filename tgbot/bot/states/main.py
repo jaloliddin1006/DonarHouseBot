@@ -15,8 +15,11 @@ class RegistrationState(StatesGroup):
     
 
 class CreateOrderState(StatesGroup):
+    orderId = State()
     delivery_type = State()
+    location = State()
     address = State()
+    addention = State()
     phone = State()
-    comment = State()
+    full_name = State()
     confirm = State()

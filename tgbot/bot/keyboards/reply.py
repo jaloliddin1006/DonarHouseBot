@@ -43,6 +43,16 @@ maxsus_btn = ReplyKeyboardMarkup(
 
 rmk = ReplyKeyboardRemove()
 
+back_btn = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="⬅️ Ortga"),
+            ],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
 
 location_btn = ReplyKeyboardMarkup(
     keyboard=[
@@ -54,6 +64,7 @@ location_btn = ReplyKeyboardMarkup(
     one_time_keyboard=True,
 )
 
+
 phone_btn = ReplyKeyboardMarkup(
     keyboard=[
         [
@@ -63,6 +74,7 @@ phone_btn = ReplyKeyboardMarkup(
     resize_keyboard=True,
     one_time_keyboard=True,
 )
+
 
 delivery_type_btn = ReplyKeyboardMarkup(
     keyboard=[
@@ -75,14 +87,11 @@ delivery_type_btn = ReplyKeyboardMarkup(
     one_time_keyboard=True,
 )
 
-def get_address_btn(address: str=None):
-    return ReplyKeyboardMarkup(
+
+get_address_btn = ReplyKeyboardMarkup(
         keyboard=[
             [
                 KeyboardButton(text="📍 Geo-Manzilni yuborish", request_location=True),
-            ],
-            [
-                KeyboardButton(text=address),
             ],
             [
                 KeyboardButton(text="⬅️ Ortga"),
@@ -91,3 +100,16 @@ def get_address_btn(address: str=None):
         resize_keyboard=True,
         one_time_keyboard=True,
     )
+
+
+address_confirmation = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="✅ To'g'ri"),
+                KeyboardButton(text="❌ Noto'g'ri"),
+            ],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+

@@ -76,6 +76,7 @@ async def set_location(message: types.Message, state: FSMContext):
     await state.set_state(RegistrationState.phone)
     await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
     
+    
 @router.message(StateFilter(RegistrationState.location), ~F.location)
 async def not_location(message: types.Message):
     await message.answer("Lokatsiyangizni yuboring", reply_markup=reply.location_btn)

@@ -59,7 +59,7 @@ def cart_btn(empty=True, order_id=None):
             ],
             [
                 InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
-                InlineKeyboardButton(text="💳 To'lov qilish", callback_data="payToOrder"),
+                InlineKeyboardButton(text="🚚 Buyurtma qilish", callback_data=f"createToOrder_{order_id}"),
             ],
             [
                 InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),
@@ -72,6 +72,19 @@ back_btn = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),
+        ],
+    ]
+)
+
+
+delivery_type_btn = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🚚 Yetkazib berish", callback_data="delivery"),
+            InlineKeyboardButton(text="🏃‍♂️ Olib ketish", callback_data="pickup"),
+        ],
+        [
+            InlineKeyboardButton(text="⬅️ Ortga", callback_data="mycart"),
         ],
     ]
 )

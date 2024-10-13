@@ -5,6 +5,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.states.main import CreateOrderState
 from tgbot.utils import get_address
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
 from tgbot.models import User, Category, Product, Order, OrderItem
@@ -13,30 +14,7 @@ from PIL import Image
 from io import BytesIO
 
 
-router = Router()
-
-# @router.callback_query(F.data=="createorder")
-# async def create_order(call: types.CallbackQuery, state=FSMContext):
-#     await state.set_state(CreateOrderState.delivery_type)
-#     await call.message.answer("Buyurtma turini tanlang", reply_markup=reply.delivery_type_btn)
-    
-
-# @router.message(StateFilter(CreateOrderState.delivery_type))
-# async def set_delivery_type(message: types.Message, state: FSMContext):
-#     delivery_type = message.text
-#     await state.update_data(delivery_type=delivery_type)
-#     await state.set_state(CreateOrderState.address)
-#     user = await User.objects.aget(telegram_id=message.from_user.id)
-#     await message.answer("Buyurtma manzilini kiriting", reply_markup=reply.get_address_btn(user.address))
-    
-    
-# @router.message(StateFilter(CreateOrderState.address))
-# async def set_address(message: types.Message, state: FSMContext):
-#     address = message.text
-#     await state.update_data(address=address)
-#     await state.set_state(CreateOrderState.phone)
-#     await message.answer("Telefon raqamingizni kiriting", reply_markup=reply.get_phone_btn())
-    
+router = Router()    
 
 async def get_cart_items_text(orderItems: list):
     total_price = 0
@@ -196,3 +174,121 @@ async def clear_order(call: types.CallbackQuery, state=FSMContext):
     await sync_to_async(userOrder.delete)()
     
     await call.message.edit_text("Savat bo'shatildi", reply_markup=inline.cart_btn(empty=True))
+
+
+@router.callback_query(F.data.startswith("createToOrder_"))
+async def create_to_order(call: types.CallbackQuery, state=FSMContext):
+    await state.clear()
+    orderId = int(call.data.split("_")[1])
+    user_tg_id = call.from_user.id
+    order = await sync_to_async(Order.objects.get)(id=orderId)
+    if order.is_all_order_info_filled:
+        # TODO: Order is already created, go to payment
+        return True  
+    
+    await call.message.edit_text("Buyurtmani qanday holatda olishni istaysiz?", reply_markup=inline.delivery_type_btn)
+    await state.update_data(orderId= orderId)
+    await state.set_state(CreateOrderState.delivery_type)
+    
+
+@router.callback_query(StateFilter(CreateOrderState.delivery_type, F.data in ['pickup', 'delivery']))
+async def get_delivery_type(call: types.CallbackQuery, state=FSMContext):
+    delivery_type = call.data
+    await state.update_data(delivery_type= delivery_type)
+    await call.message.delete()
+    
+    if delivery_type == 'pickup':
+        await call.message.answer("O'zingizga qulay filialni tanlang. ")
+        # TODO: Filialni tanlashga o'tib ketadi
+        return True
+    
+    await call.message.answer("<b>Eltib berish</b> uchun <b>geo-joylashuvni</b> jo'nating:", reply_markup=reply.get_address_btn)
+    await state.set_state(CreateOrderState.location)
+    
+    
+@router.message(StateFilter(CreateOrderState.location), F.location)
+async def get_location_func(message: types.Message, state: FSMContext):
+    location = message.location
+    location_url = f"https://maps.google.de/maps?q={location.latitude},{location.longitude}&z=17&t=m"
+    address = await get_address(location.latitude, location.longitude)
+    await state.update_data(
+        location= location_url,
+        address= address
+    )
+    
+    await message.answer(f"Buyurtma qilmoqchi bo'lgan manzilingiz\n<b>{address}</b>\n\n Ushbu manzilni tasdiqlaysizmi?", reply_markup=reply.address_confirmation)
+    await state.set_state(CreateOrderState.address)
+
+
+@router.message(StateFilter(CreateOrderState.location), ~F.location)
+async def get_not_location_func(message: types.Message, state: FSMContext):
+    await message.answer("<b>Eltib berish</b> uchun <b>geo-joylashuvni</b> jo'nating:", reply_markup=reply.get_address_btn)
+    await state.set_state(CreateOrderState.location)
+    
+
+@router.message(StateFilter(CreateOrderState.address), F.text )
+async def address_confirm_func(message: types.Message, state: FSMContext):
+    
+    if message.text == "✅ To'g'ri":
+        await message.answer("Manzil bo'yicha qo'shimcha ma'lumotingizni kiriting.\nMisol uchun: Podyezd №, qavat №, eshik kodi №, kv №..", reply_markup=reply.back_btn)
+        await state.set_state(CreateOrderState.addention)
+        return True
+    
+    if message.text == "❌ Noto'g'ri":
+        await get_not_location_func(message, state)
+        return True  
+    
+    await message.answer(f"Yuqoridagi manzilning to'g'riligini tasdiqlang?", reply_markup=reply.address_confirmation)
+    await state.set_state(CreateOrderState.address)
+    
+
+
+@router.message(StateFilter(CreateOrderState.addention), F.text)
+async def address_addention_func(message: types.Message, state: FSMContext):
+    addention = message.text
+    await state.update_data(addention= addention)
+    await state.set_state(CreateOrderState.phone)
+    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    
+    
+    
+@router.message(StateFilter(CreateOrderState.phone), F.contact)
+async def set_phone(message: types.Message, state: FSMContext):
+    phone = message.contact.phone_number
+    await state.update_data(phone=phone)
+    
+    await state.set_state(CreateOrderState.full_name)
+    await message.answer("Ismingizni kiriting", reply_markup=reply.rmk)
+    
+    
+@router.message(StateFilter(CreateOrderState.phone), ~F.contact)
+async def not_phone(message: types.Message, state=FSMContext):
+    phone_text = message.text
+    # if len
+    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    
+
+@router.message(StateFilter(CreateOrderState.full_name), F.text)
+async def get_full_name(message: types.Message, state=FSMContext):
+    full_name = message.text
+    await state.update_data(full_name=full_name)
+    data = await state.get_data()
+    # print(data)
+    text = f"Buyurtma ma'lumotlari to'g'riligini tasdiqlang\n\n"
+    text += f"Buyurtma turi: <b>{data.get('delivery_type')}</b>\n"
+    text += f"Qabul qiluvchi: <b>{full_name}</b>\n"
+    text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
+    text += f"Manzil: <b>{data.get('address')}</b>\n"
+    text += f"Qo'shimcha: <b>{data.get('addention')}</b>\n"
+    
+    await message.answer(text, reply_markup=reply.address_confirmation)
+    await state.set_state(CreateOrderState.confirm)
+    
+    
+@router.message(StateFilter(CreateOrderState.confirm))
+async def confirm_data_func(message: types.Message, state=FSMContext):
+    data = await state.get_data()
+    print(data)
+    
+    if message.text == "✅ To'g'ri":
+        print("qabul qilindi")
