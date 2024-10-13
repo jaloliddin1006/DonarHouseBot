@@ -38,11 +38,35 @@ router = Router()
 #     await message.answer("Telefon raqamingizni kiriting", reply_markup=reply.get_phone_btn())
     
 
+async def get_cart_items_text(orderItems: list):
+    total_price = 0
+    text = "Sizning savatingizda quidagilar mavjud: \n\n"
+    for index, item in orderItems:
+        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
+        text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} so'm => {item.get("total_price")} so'm\n\n"""
+        total_price += item.get("total_price")
+        
+    text += f"<b>Jami: {total_price} so'm </b>"
+    return text
+
+
 @router.callback_query(F.data == "categories") 
 async def categories(call: types.CallbackQuery, state=FSMContext):
     await call.message.delete()
+    text = "Kategoriyalardan birini tanlang"
+    user_cart = False
+    
+    user_tg_id = call.from_user.id
+    user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
+    userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
+    if userOrder:
+        orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
+        if orderItems:
+            text = await get_cart_items_text(enumerate(orderItems, 1))
+            user_cart = True
+            
     categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
-    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_{0}"))
+    await call.message.answer(text, reply_markup=builders.get_categories_btn(categories, f"category_{0}", user_cart), parse_mode=ParseMode.HTML)
 
 @router.callback_query(F.data.startswith("category_"))
 async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
@@ -73,7 +97,7 @@ async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
     
     await call.answer("Maxsulotlar topilmadi")
     categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
-    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_{0}"))
+    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_0"))
 
 
 @router.callback_query(F.data.startswith("product_"))
@@ -107,7 +131,7 @@ async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValu
     
     product = await sync_to_async(Product.objects.get)(id=product_id)
     orderItem, created = await sync_to_async(OrderItem.objects.get_or_create)(order=userOrder, product=product, defaults={"quantity": quantity})
-    # orderItem.quantity = quantity
+    orderItem.quantity = quantity
     await orderItem.asave()
     
     await call.message.answer(f"'{product.name}' dan {quantity} tasi  savatga qo'shildi")
@@ -117,32 +141,58 @@ async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValu
 @router.callback_query(F.data == "mycart")
 async def my_cart(call: types.CallbackQuery, state=FSMContext):
     user_tg_id = call.from_user.id
-    await call.message.delete()
     
     user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
     userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
     
     if not userOrder:
-        await call.message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
         return True
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
     
     if not orderItems:
-        await call.message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
         return True
-        
-    total_price = 0
-    text = "Sizning savatingizda quidagilar mavjud: \n\n"
-    for index, item in enumerate(orderItems, 1):
-        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
-        text += f"""  >  {int(item.get("product__price"))} x {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
-        total_price += item.get("total_price")
-        
-    text += f"<b>Jami: {total_price} so'm </b>"
     
-    await call.message.answer(text, reply_markup=inline.cart_btn(empty=False), parse_mode=ParseMode.HTML)
+    text = await get_cart_items_text(enumerate(orderItems, 1))
+        
+    # total_price = 0
+    # text = "Sizning savatingizda quidagilar mavjud: \n\n"
+    # for index, item in enumerate(orderItems, 1):
+    #     text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
+    #     text += f"""  >  {int(item.get("product__price"))} x {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
+    #     total_price += item.get("total_price")
+        
+    # text += f"<b>Jami: {total_price} so'm </b>"
+    
+    await call.message.edit_text(text, reply_markup=inline.cart_btn(empty=False, order_id=userOrder.id), parse_mode=ParseMode.HTML)
         
 
 
+@router.callback_query(F.data.startswith("changeproducts_"))
+async def change_products(call: types.CallbackQuery, state=FSMContext):
+    user_tg_id = call.from_user.id
+    cart_id = int(call.data.split("_")[1])
+
+    orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=cart_id))
     
+    if not orderItems:
+        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        return True
+    
+    orderItems = list(enumerate(orderItems, 1))
+    text = await get_cart_items_text(orderItems)
+    
+    await call.message.edit_text(text, reply_markup=fabrics.change_values(orderItems, cart_id), parse_mode=ParseMode.HTML)
+    
+    
+@router.callback_query(F.data == "clearOrder")
+async def clear_order(call: types.CallbackQuery, state=FSMContext):
+    user_tg_id = call.from_user.id
+    user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
+    userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
+    
+    await sync_to_async(userOrder.delete)()
+    
+    await call.message.edit_text("Savat bo'shatildi", reply_markup=inline.cart_btn(empty=True))

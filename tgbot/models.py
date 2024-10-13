@@ -122,6 +122,7 @@ class Order(BaseModel):
     phone = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, choices=ORDER_STATUSES, default="active")
     addention = models.TextField(null=True, blank=True)
+    is_all_order_info_filled = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
     total_paid_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
@@ -139,6 +140,7 @@ class Order(BaseModel):
         
         if not self.location and self.address==self.user.address:
             self.location = self.user.location
+            
         super(Order, self).save(*args, **kwargs)
     
     @property

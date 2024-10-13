@@ -40,7 +40,7 @@ language_btn = InlineKeyboardMarkup(
 )
 
 
-def cart_btn(empty=True):
+def cart_btn(empty=True, order_id=None):
     if empty:
         return InlineKeyboardMarkup(
             inline_keyboard=[
@@ -48,14 +48,14 @@ def cart_btn(empty=True):
                     InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
                 ],
                 [
-                    InlineKeyboardButton(text="⬅️ Ortga", callback_data="main"),
+                    InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),
                 ],
             ]
         )
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🔄 Maxsulotlarni o'zgartirish", callback_data="changeproducts"),
+                InlineKeyboardButton(text="🔄 Maxsulotlarni o'zgartirish", callback_data=f"changeproducts_{order_id}"),
             ],
             [
                 InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
