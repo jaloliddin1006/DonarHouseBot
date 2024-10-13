@@ -1,20 +1,18 @@
-from django.conf import settings
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
+from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
 from tgbot.utils import get_address
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
 from tgbot.models import User, Category, Product, Order, OrderItem
-from tgbot.bot.loader import bot
-from tgbot.bot.states.main import CreateOrderState
+from tgbot.bot.loader import bot, STICERS
 from PIL import Image
 from io import BytesIO
-from aiogram.types import InputFile, FSInputFile
-import os
+
+
 router = Router()
 
 # @router.callback_query(F.data=="createorder")
@@ -39,7 +37,7 @@ router = Router()
 #     await state.set_state(CreateOrderState.phone)
 #     await message.answer("Telefon raqamingizni kiriting", reply_markup=reply.get_phone_btn())
     
-    
+
 @router.callback_query(F.data == "categories") 
 async def categories(call: types.CallbackQuery, state=FSMContext):
     await call.message.delete()
@@ -135,17 +133,16 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
         return True
         
     total_price = 0
-    text = "Sizning Savatingizda: \n\n"
+    text = "Sizning savatingizda quidagilar mavjud: \n\n"
     for index, item in enumerate(orderItems, 1):
-        text += f"""{index}. {item.get("product__name")} dan\n """
-        text += f"""|>  {item.get("product__price")} * {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
+        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
+        text += f"""  >  {int(item.get("product__price"))} x {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
         total_price += item.get("total_price")
         
-    text += f"Jami: {total_price} so'm"
+    text += f"<b>Jami: {total_price} so'm </b>"
     
-    await call.message.answer(text, reply_markup=inline.cart_btn(empty=False))
+    await call.message.answer(text, reply_markup=inline.cart_btn(empty=False), parse_mode=ParseMode.HTML)
         
 
 
-    
     

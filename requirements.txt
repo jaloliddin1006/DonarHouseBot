@@ -6,3 +6,4 @@ django-debug-toolbar~=4.4.6
 django-ckeditor==6.4.2
 django-mptt~=0.16.0
 geopy~=2.4.1
+django-markdownx~=4.0.7

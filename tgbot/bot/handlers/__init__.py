@@ -4,7 +4,7 @@ from tgbot.bot.filters import ChatPrivateFilter, IsAdminFilter
 
 
 def setup_routers() -> Router:
-    from .users import start, help, echo, admin, order_product, pagination
+    from .users import start, help, echo, admin, order_product, pagination, main
     from .errors import error_handler
 
     router = Router()
@@ -15,7 +15,7 @@ def setup_routers() -> Router:
     admin.router.message.filter(IsAdminFilter())
 
     router.include_routers(admin.router, start.router, order_product.router,
-                           help.router, pagination.router,
+                           help.router, pagination.router, main.router,
                            echo.router, error_handler.router
                            )
 

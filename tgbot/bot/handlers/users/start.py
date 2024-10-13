@@ -19,6 +19,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def do_start(message: types.Message, state: FSMContext):
+    await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
     await message.answer(f"Assalomu alaykum {full_name}! ", parse_mode=ParseMode.MARKDOWN)

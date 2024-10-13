@@ -3,9 +3,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 import debug_toolbar
+from markdownx import urls as markdownx
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('markdownx/', include(markdownx)),
     path('', include('tgbot.urls')),
     path('__debug__/', include(debug_toolbar.urls)),
 ]

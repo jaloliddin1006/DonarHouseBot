@@ -59,12 +59,19 @@ def cart_btn(empty=True):
             ],
             [
                 InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
-            ],
-            [
                 InlineKeyboardButton(text="💳 To'lov qilish", callback_data="payToOrder"),
             ],
             [
-                InlineKeyboardButton(text="⬅️ Ortga", callback_data="main"),
+                InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),
             ],
         ]
     )
+
+
+back_btn = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),
+        ],
+    ]
+)

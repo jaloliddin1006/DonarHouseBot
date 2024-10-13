@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.utils.html import format_html
+from markdownx.admin import MarkdownxModelAdmin
 from mptt.admin import DraggableMPTTAdmin
 from tgbot.forms import ProductAdminForm
 from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem, PromoCodes
@@ -81,7 +82,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     
 @admin.register(About)
-class AboutAdmin(admin.ModelAdmin):
+class AboutAdmin(MarkdownxModelAdmin):
     list_display = ('id', 'about', 'is_active')
     
     def about(self, obj):

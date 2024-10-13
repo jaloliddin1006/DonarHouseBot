@@ -42,8 +42,18 @@ def get_categories_btn(categories: list, back: str):
     return builder.as_markup()
 
 def get_products_btn(products: list, back: str):
+    len_ = len(products)
     builder = InlineKeyboardBuilder()
     [builder.button(text=product.get('name'), callback_data=f"product_{product.get('id')}") for product in products]
     builder.button(text="⬅️ Ortga", callback_data=back)
-    builder.adjust(*[2], 1)  
+    builder.adjust(*[2]*(len_//2), 1)  
     return builder.as_markup()
+
+def get_brancches_btn(branches: list):
+    len_ = len(branches)
+    builder = InlineKeyboardBuilder()
+    [builder.button(text=branch.name, callback_data=f"branch_{branch.id}") for branch in branches]
+    builder.button(text="⬅️ Ortga", callback_data="branch_0")
+    builder.adjust(*[2]*(len_//2), 1)  
+    return builder.as_markup()
+
