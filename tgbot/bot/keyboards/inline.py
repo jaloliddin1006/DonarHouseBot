@@ -40,7 +40,7 @@ language_btn = InlineKeyboardMarkup(
 )
 
 
-def cart_btn(empty=True, order_id=None):
+def cart_btn(empty=True, order_id=None, not_fill_field=True):
     if empty:
         return InlineKeyboardMarkup(
             inline_keyboard=[
@@ -59,7 +59,7 @@ def cart_btn(empty=True, order_id=None):
             ],
             [
                 InlineKeyboardButton(text="🛒 Maxsulot qo'shish", callback_data="categories"),
-                InlineKeyboardButton(text="🚚 Buyurtma qilish", callback_data=f"createToOrder_{order_id}"),
+                InlineKeyboardButton(text="🚚 Buyurtma qilish" if not_fill_field else "💳 To'lov qilish", callback_data=f"createToOrder_{order_id}"),
             ],
             [
                 InlineKeyboardButton(text="⬅️ Ortga", callback_data="category_0"),

@@ -20,6 +20,7 @@ class CreateOrderState(StatesGroup):
     location = State()
     address = State()
     addention = State()
+    branch = State()
     phone = State()
     full_name = State()
     confirm = State()

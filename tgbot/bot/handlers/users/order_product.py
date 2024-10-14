@@ -5,18 +5,19 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.loader import bot, STICERS
+from tgbot.bot.handlers.users.main import my_cart_message
+from tgbot.bot.keyboards import reply, inline, builders, fabrics
 from tgbot.bot.states.main import CreateOrderState
 from tgbot.utils import get_address
-from tgbot.bot.keyboards import reply, inline, builders, fabrics
-from tgbot.models import User, Category, Product, Order, OrderItem
-from tgbot.bot.loader import bot, STICERS
+from tgbot.models import Branch, User, Category, Product, Order, OrderItem
 from PIL import Image
 from io import BytesIO
 
 
 router = Router()    
 
-async def get_cart_items_text(orderItems: list):
+async def get_cart_items_text(orderItems: list, order: object = None):
     total_price = 0
     text = "Sizning savatingizda quidagilar mavjud: \n\n"
     for index, item in orderItems:
@@ -24,7 +25,23 @@ async def get_cart_items_text(orderItems: list):
         text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} so'm => {item.get("total_price")} so'm\n\n"""
         total_price += item.get("total_price")
         
-    text += f"<b>Jami: {total_price} so'm </b>"
+    text += f"<b>Jami: {total_price} so'm </b>\n\n"
+    
+    if order:
+        text += "Buyurtma ma'lumotlari:\n\n"
+        if order.delivery == 'pickup':
+            text += f"Buyurtma turi: <b>Olib ketish</b>\n"
+            text += f"Filial: <b>{order.branch.name}</b>\n"
+            text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
+            text += f"Telefon raqam: <b>{order.phone}</b>\n"
+        else:
+            text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
+            text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
+            text += f"Telefon raqam: <b>{order.phone}</b>\n"
+            text += f"Manzil: <b>{order.address}</b>\n"
+            text += f"Qo'shimcha: <b>{order.addention}</b>\n"
+        text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
+    
     return text
 
 
@@ -133,7 +150,12 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
         await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
         return True
     
-    text = await get_cart_items_text(enumerate(orderItems, 1))
+    if userOrder.is_all_order_info_filled:
+        order = userOrder 
+    else:
+        order = None
+        
+    text = await get_cart_items_text(enumerate(orderItems, 1), order)
         
     # total_price = 0
     # text = "Sizning savatingizda quidagilar mavjud: \n\n"
@@ -152,7 +174,7 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
 async def change_products(call: types.CallbackQuery, state=FSMContext):
     user_tg_id = call.from_user.id
     cart_id = int(call.data.split("_")[1])
-
+    userOrder = await sync_to_async(Order.objects.get)(id=cart_id)
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=cart_id))
     
     if not orderItems:
@@ -160,7 +182,12 @@ async def change_products(call: types.CallbackQuery, state=FSMContext):
         return True
     
     orderItems = list(enumerate(orderItems, 1))
-    text = await get_cart_items_text(orderItems)
+    if userOrder.is_all_order_info_filled:
+        order = userOrder 
+    else:
+        order = None
+        
+    text = await get_cart_items_text(orderItems, order)
     
     await call.message.edit_text(text, reply_markup=fabrics.change_values(orderItems, cart_id), parse_mode=ParseMode.HTML)
     
@@ -198,8 +225,9 @@ async def get_delivery_type(call: types.CallbackQuery, state=FSMContext):
     await call.message.delete()
     
     if delivery_type == 'pickup':
-        await call.message.answer("O'zingizga qulay filialni tanlang. ")
-        # TODO: Filialni tanlashga o'tib ketadi
+        branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
+        await call.message.answer("O'zingizga qulay filialni tanlang. ", reply_markup=builders.get_brancches_btn(branches))
+        await state.set_state(CreateOrderState.branch)
         return True
     
     await call.message.answer("<b>Eltib berish</b> uchun <b>geo-joylashuvni</b> jo'nating:", reply_markup=reply.get_address_btn)
@@ -240,7 +268,6 @@ async def address_confirm_func(message: types.Message, state: FSMContext):
     
     await message.answer(f"Yuqoridagi manzilning to'g'riligini tasdiqlang?", reply_markup=reply.address_confirmation)
     await state.set_state(CreateOrderState.address)
-    
 
 
 @router.message(StateFilter(CreateOrderState.addention), F.text)
@@ -251,7 +278,20 @@ async def address_addention_func(message: types.Message, state: FSMContext):
     await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
     
     
+@router.callback_query(StateFilter(CreateOrderState.branch), F.data.startswith('branch_'))
+async def get_order_branch(call: types.CallbackQuery, state=FSMContext):
+    await call.message.delete()
+    branch_id = call.data.split('_')[-1]
+    if str(branch_id) == '0':
+        await state.clear()
+        await my_cart(call, state)
+        return True
     
+    await state.update_data(branch=branch_id)
+    await state.set_state(CreateOrderState.phone)
+    await call.message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    
+
 @router.message(StateFilter(CreateOrderState.phone), F.contact)
 async def set_phone(message: types.Message, state: FSMContext):
     phone = message.contact.phone_number
@@ -273,13 +313,21 @@ async def get_full_name(message: types.Message, state=FSMContext):
     full_name = message.text
     await state.update_data(full_name=full_name)
     data = await state.get_data()
+    
     # print(data)
     text = f"Buyurtma ma'lumotlari to'g'riligini tasdiqlang\n\n"
-    text += f"Buyurtma turi: <b>{data.get('delivery_type')}</b>\n"
-    text += f"Qabul qiluvchi: <b>{full_name}</b>\n"
-    text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
-    text += f"Manzil: <b>{data.get('address')}</b>\n"
-    text += f"Qo'shimcha: <b>{data.get('addention')}</b>\n"
+    if data.get('delivery_type') == 'pickup':
+        branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
+        text += f"Buyurtma turi: <b>Olib ketish</b>\n"
+        text += f"Filial: <b>{branch.name}</b>\n"
+        text += f"Olib ketuvchi: <b>{full_name}</b>\n"
+        text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
+    else:
+        text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
+        text += f"Qabul qiluvchi: <b>{full_name}</b>\n"
+        text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
+        text += f"Manzil: <b>{data.get('address')}</b>\n"
+        text += f"Qo'shimcha: <b>{data.get('addention')}</b>\n"
     
     await message.answer(text, reply_markup=reply.address_confirmation)
     await state.set_state(CreateOrderState.confirm)
@@ -288,7 +336,44 @@ async def get_full_name(message: types.Message, state=FSMContext):
 @router.message(StateFilter(CreateOrderState.confirm))
 async def confirm_data_func(message: types.Message, state=FSMContext):
     data = await state.get_data()
-    print(data)
+    await state.clear()
     
     if message.text == "✅ To'g'ri":
-        print("qabul qilindi")
+        print(data)
+        orderId = data.get("orderId")
+        if data.get('branch'):
+            branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
+        else:
+            branch = None
+        print(branch)
+        order = await sync_to_async(Order.objects.get)(id=orderId)
+        order.branch = branch
+        order.delivery = data.get("delivery_type")
+        order.address = data.get("address")
+        order.location = data.get("location")
+        order.full_name = data.get("full_name")
+        order.phone = data.get("phone")
+        order.addention = data.get("addention")
+        order.is_all_order_info_filled = True
+        await order.asave()
+        
+        
+        text = f"Buyurtma ma'lumotlari saqlandi. To'lovni amalga oshirishingiz bilan buyurtma faollashadi.\n\n"
+        if order.delivery == 'pickup':
+            text += f"Buyurtma turi: <b>Olib ketish</b>\n"
+            text += f"Filial: <b>{branch.name}</b>\n"
+            text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
+            text += f"Telefon raqam: <b>{order.phone}</b>\n"
+        else:
+            text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
+            text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
+            text += f"Telefon raqam: <b>{order.phone}</b>\n"
+            text += f"Manzil: <b>{order.address}</b>\n"
+            text += f"Qo'shimcha: <b>{order.addention}</b>\n"
+        text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
+        await message.answer(text, reply_markup=reply.rmk)
+    else:
+        
+        await message.answer("Buyurtma ma'lumotlari bekor qilindi.", reply_markup=reply.rmk)
+        await my_cart_message(message, state)
+        return True
