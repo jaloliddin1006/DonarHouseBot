@@ -88,3 +88,12 @@ delivery_type_btn = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+pay_btn = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="💳 To'lash", pay=True),
+        ],
+    ]
+)

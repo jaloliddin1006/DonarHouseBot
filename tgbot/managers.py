@@ -40,3 +40,10 @@ class OrderManager(Manager):
                     .prefetch_related('items')
                     .values('id', 'status', 'delivery', 'items__id', 'items__product__name', 'items__product__price', 'items__quantity'))
         return None
+    
+    def get_full_order(self, id):
+        order_full = (self.get_queryset().filter(id=id)
+                      .select_related('branch')
+                      .values('id', 'location', 'full_name', 'phone', 'address', 'addention', 'delivery', 'status', 'branch__name', 'branch__location'))
+        return order_full
+        

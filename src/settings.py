@@ -11,6 +11,7 @@ env = Env()
 env.read_env()
 
 API_TOKEN = env.str("API_TOKEN")
+PAYMENT_TOKEN = env.str("PAYMENT_TOKEN")
 SECRET_KEY = env.str("SECRET_KEY")
 DEBUG = env.bool("DEBUG")
 ADMINS = env.list("ADMINS")

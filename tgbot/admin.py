@@ -5,15 +5,16 @@ from django.utils.html import format_html
 from markdownx.admin import MarkdownxModelAdmin
 from mptt.admin import DraggableMPTTAdmin
 from tgbot.forms import ProductAdminForm
-from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem, PromoCodes
+from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, About, Branch, Order, OrderItem, PromoCodes, Payment
 
 
 @admin.register(TelegramUser)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "telegram_id", "language_code", "phone", 'is_active', 'created_at')
-    fields = ("full_name", "username", "telegram_id", "language_code", "phone", "address", "location", "is_active")
+    list_display = ("id", "full_name", "username", "telegram_id", "language_code", "phone", "isQrCode", 'is_active', 'created_at')
+    readonly_fields = ("full_name", "username", "telegram_id", "language_code", "phone", "address", "location", )
     search_fields = ("full_name", "username", "telegram_id", )
     list_per_page = 50
+    list_display_links = ('id', 'full_name')
 
 
 @admin.register(BotAdmin)
@@ -107,7 +108,7 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     inlines = (OrderItemInline,)
-    list_display = ('id', 'user', 'is_all_order_info_filled', 'status', 'total_price', 'is_paid', 'payment_id', 'created_at')
+    list_display = ('id', 'user', 'is_all_order_info_filled', 'status', 'total_price', 'is_paid', 'created_at')
     list_display_links = ('id', 'user')
     list_filter = ('status',)
     list_per_page = 50
@@ -118,9 +119,18 @@ class OrderAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related('user').prefetch_related('items')
 
 
-@admin.register(PromoCodes)
-class PromoCodesAdmin(admin.ModelAdmin):
-    list_display = ('id', 'code', 'discount', 'is_active', 'created_at', 'end_time')
-    list_display_links = ('id', 'code')
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order__id', 'amount', 'full_name', 'phone', 'telegram_payment_charge_id', 'created_at')
+    list_display_links = ('id', 'order__id')
     list_per_page = 50
-    search_fields = ('code', 'discount')
+    search_fields = ('full_name', 'phone', 'telegram_payment_charge_id')
+    list_select_related = ('order',)
+    
+    
+# @admin.register(PromoCodes)
+# class PromoCodesAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'code', 'discount', 'is_active', 'created_at', 'end_time')
+#     list_display_links = ('id', 'code')
+#     list_per_page = 50
+#     search_fields = ('code', 'discount')

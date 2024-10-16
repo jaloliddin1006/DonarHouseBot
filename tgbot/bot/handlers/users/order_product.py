@@ -5,6 +5,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.handlers.users.payment import create_invoice, payment_to_order
 from tgbot.bot.loader import bot, STICERS
 from tgbot.bot.handlers.users.main import my_cart_message
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
@@ -17,7 +18,7 @@ from io import BytesIO
 
 router = Router()    
 
-async def get_cart_items_text(orderItems: list, order: object = None):
+async def get_cart_items_text(orderItems: list, order: Order = None):
     total_price = 0
     text = "Sizning savatingizda quidagilar mavjud: \n\n"
     for index, item in orderItems:
@@ -30,8 +31,10 @@ async def get_cart_items_text(orderItems: list, order: object = None):
     if order:
         text += "Buyurtma ma'lumotlari:\n\n"
         if order.delivery == 'pickup':
+            branch = await sync_to_async(Branch.objects.get)(id=order.branch_id)
+            
             text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-            text += f"Filial: <b>{order.branch.name}</b>\n"
+            text += f"Filial: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
             text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
             text += f"Telefon raqam: <b>{order.phone}</b>\n"
         else:
@@ -165,8 +168,11 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
     #     total_price += item.get("total_price")
         
     # text += f"<b>Jami: {total_price} so'm </b>"
+    not_fill_field = True
+    if userOrder.is_all_order_info_filled:
+        not_fill_field = False
     
-    await call.message.edit_text(text, reply_markup=inline.cart_btn(empty=False, order_id=userOrder.id), parse_mode=ParseMode.HTML)
+    await call.message.edit_text(text, reply_markup=inline.cart_btn(empty=False, order_id=userOrder.id, not_fill_field=not_fill_field), parse_mode=ParseMode.HTML)
         
 
 
@@ -187,7 +193,7 @@ async def change_products(call: types.CallbackQuery, state=FSMContext):
     else:
         order = None
         
-    text = await get_cart_items_text(orderItems, order)
+    text = await get_cart_items_text(orderItems)
     
     await call.message.edit_text(text, reply_markup=fabrics.change_values(orderItems, cart_id), parse_mode=ParseMode.HTML)
     
@@ -210,6 +216,7 @@ async def create_to_order(call: types.CallbackQuery, state=FSMContext):
     user_tg_id = call.from_user.id
     order = await sync_to_async(Order.objects.get)(id=orderId)
     if order.is_all_order_info_filled:
+        await payment_to_order(call, order)
         # TODO: Order is already created, go to payment
         return True  
     
@@ -319,7 +326,7 @@ async def get_full_name(message: types.Message, state=FSMContext):
     if data.get('delivery_type') == 'pickup':
         branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
         text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-        text += f"Filial: <b>{branch.name}</b>\n"
+        text += f"Filial: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
         text += f"Olib ketuvchi: <b>{full_name}</b>\n"
         text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
     else:
@@ -339,6 +346,7 @@ async def confirm_data_func(message: types.Message, state=FSMContext):
     await state.clear()
     
     if message.text == "✅ To'g'ri":
+        user = await sync_to_async(User.objects.get)(telegram_id=message.from_user.id)
         print(data)
         orderId = data.get("orderId")
         if data.get('branch'):
@@ -361,7 +369,7 @@ async def confirm_data_func(message: types.Message, state=FSMContext):
         text = f"Buyurtma ma'lumotlari saqlandi. To'lovni amalga oshirishingiz bilan buyurtma faollashadi.\n\n"
         if order.delivery == 'pickup':
             text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-            text += f"Filial: <b>{branch.name}</b>\n"
+            text += f"Filial: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
             text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
             text += f"Telefon raqam: <b>{order.phone}</b>\n"
         else:
@@ -369,11 +377,13 @@ async def confirm_data_func(message: types.Message, state=FSMContext):
             text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
             text += f"Telefon raqam: <b>{order.phone}</b>\n"
             text += f"Manzil: <b>{order.address}</b>\n"
-            text += f"Qo'shimcha: <b>{order.addention}</b>\n"
+            text += f"Qo'shimcha: <b>{order.addention}</b>\n\n"
         text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
         await message.answer(text, reply_markup=reply.rmk)
+        invoice = await create_invoice(order, user.isQrCode)
+        await message.answer_invoice(**invoice.generate_invoice(), name='alibobo', payload=f"{order.id}")
     else:
         
-        await message.answer("Buyurtma ma'lumotlari bekor qilindi.", reply_markup=reply.rmk)
+        await message.answer("Buyurtma ma'lumotlari bekor qilindi.", reply_markup=reply.rmk)    
         await my_cart_message(message, state)
         return True

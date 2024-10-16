@@ -1,6 +1,6 @@
 from django.conf import settings
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.session.middlewares.request_logging import logger
@@ -17,18 +17,30 @@ from tgbot.bot.states.main import RegistrationState
 router = Router()
 
 
+# @router.message(CommandStart())
+# async def do_start(message: types.Message, state: FSMContext, command: CommandObject):
+    
 @router.message(CommandStart())
-async def do_start(message: types.Message, state: FSMContext):
+async def do_start(message: types.Message, state: FSMContext, command: CommandObject):
     await state.clear()
+    qrcode=False
+    if command.args is not None:
+        print(command.args)
+        if command.args == 'qrcode':
+            qrcode = True
+            
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
     await message.answer(f"Assalomu alaykum {full_name}! ", parse_mode=ParseMode.MARKDOWN)
     user, created = await User.objects.aget_or_create(
         telegram_id=telegram_id,
-        full_name=full_name,
-        username=message.from_user.username
     )
+    
     if created:
+        user.full_name = message.from_user.full_name or ''
+        user.username = message.from_user.username or ''
+        user.isQrCode = qrcode
+        await user.asave()
         count = await User.objects.acount()
         msg = (f"[{make_title(user.full_name)}](tg://user?id={user.telegram_id}) bazaga qo'shildi\.\nBazada {count} ta foydalanuvchi bor\.")
     else:
