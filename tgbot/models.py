@@ -173,9 +173,10 @@ class Payment(BaseModel):
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50)
     telegram_payment_charge_id=models.CharField(max_length=255)
+    provider_payment_charge_id = models.CharField(max_length=255)
     
     def __str__(self):
-        return f"{self.order_id} - {self.amount} "
+        return f"{self.full_name} - {self.amount} "
 
     class Meta:
         db_table = "payments"

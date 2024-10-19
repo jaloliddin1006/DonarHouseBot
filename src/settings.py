@@ -11,7 +11,6 @@ env = Env()
 env.read_env()
 
 API_TOKEN = env.str("API_TOKEN")
-PAYMENT_TOKEN = env.str("PAYMENT_TOKEN")
 SECRET_KEY = env.str("SECRET_KEY")
 DEBUG = env.bool("DEBUG")
 ADMINS = env.list("ADMINS")
@@ -21,6 +20,17 @@ DB_PASS = env.str("DB_PASS")
 DB_NAME = env.str("DB_NAME")
 DB_HOST = env.str("DB_HOST")
 DB_PORT = env.str("DB_PORT")
+
+IS_PRODUCTION=env.bool("IS_PRODUCTION")
+
+if IS_PRODUCTION:
+    PAYMENT_TOKEN_CLICK = env.str("PAYMENT_TOKEN_CLICK")
+    PAYMENT_TOKEN_PAYMEE = env.str("PAYMENT_TOKEN_PAYMEE")
+else:
+    PAYMENT_TOKEN_CLICK = env.str("TEST_PAYMENT_TOKEN_CLICK")
+    PAYMENT_TOKEN_PAYMEE = env.str("TEST_PAYMENT_TOKEN_PAYMEE")
+    
+
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -85,24 +95,24 @@ WSGI_APPLICATION = 'src.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 # DATABASE WITH SQLITE
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# DATABASE WITH POSTGRES
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': DB_NAME,
-#         'USER': DB_USER,
-#         "PASSWORD": DB_PASS,
-#         "HOST": DB_HOST,
-#         "PORT": DB_PORT,
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+# DATABASE WITH POSTGRES
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        "PASSWORD": DB_PASS,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -126,14 +136,24 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-US'
 
 TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
+LANGUAGES = [
+    ('uz', 'O‘zbekcha'),
+    ('ru', 'Русский'),
+    ('en', 'English'),
+]
+
+# Tarjima fayllari joylashgan joy
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/

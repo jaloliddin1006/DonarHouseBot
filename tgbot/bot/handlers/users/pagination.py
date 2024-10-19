@@ -1,12 +1,12 @@
 from contextlib import suppress
 from aiogram.types import CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
+from tgbot.bot.handlers.users.utils import get_cart_items_text
 from tgbot.bot.keyboards import fabrics
 from aiogram import Router, F
 from asgiref.sync import sync_to_async
 from tgbot.models import OrderItem, Product
 from tgbot.bot.loader import STICERS
-from tgbot.bot.handlers.users.order_product import get_cart_items_text
 # from data.subloader import get_json
 
 router = Router()
@@ -53,9 +53,9 @@ async def change_order_products_value(call: CallbackQuery, callback_data: fabric
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=orderId))
     
-    orderItems = list(enumerate(orderItems, 1))
-    text = await get_cart_items_text(orderItems)
+    # orderItems = list(enumerate(orderItems, 1))
+    text = await get_cart_items_text(list(enumerate(orderItems, 1)))
     # print(text)
     with suppress(TelegramBadRequest):
-        await call.message.edit_text(text, reply_markup=fabrics.change_values(orderItems, orderId))
+        await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), orderId))
     # await call.answer("xatolik!!", show_alert=True)

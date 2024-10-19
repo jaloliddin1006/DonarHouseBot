@@ -5,6 +5,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.handlers.users.utils import get_cart_items_text
 from tgbot.bot.loader import bot, STICERS
 from tgbot.bot.handlers.users.main import my_cart_message
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
@@ -25,9 +26,16 @@ from aiogram.types import LabeledPrice
 from tgbot.bot.utils.payment_data import Product
 
 
-async def create_invoice(order: Order, isQrCode=None):
+async def create_invoice(order: Order, isQrCode=None, payment='click'):
     prices = []
-    delivery_price = 1500000
+    delivery_price = 0
+    
+    if payment == 'click':
+        provider_token = settings.PAYMENT_TOKEN_CLICK
+    else:
+        provider_token = settings.PAYMENT_TOKEN_PAYMEE
+    
+    
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
     print(isQrCode)
     
@@ -49,13 +57,13 @@ async def create_invoice(order: Order, isQrCode=None):
                 amount=delivery_price
             )
         )
-        if isQrCode:
-            prices.append(
-                LabeledPrice(
-                    label="Chegirma",
-                    amount=-(delivery_price/10) # 10 % chegirma
-                )
-            )
+        # if isQrCode:
+        #     prices.append(
+        #         LabeledPrice(
+        #             label="Chegirma",
+        #             amount=-(delivery_price/10) # 10 % chegirma
+        #         )
+        #     )
     
 
     invoice = Product(
@@ -70,9 +78,9 @@ async def create_invoice(order: Order, isQrCode=None):
         need_email=False,
         need_name=True,
         need_phone_number=True,
+        provider_token = provider_token,
         # max_tip_amount = 1000000,
         # suggested_tip_amounts = [100000, 200000, 500000]
-
         
     )
     
@@ -80,55 +88,71 @@ async def create_invoice(order: Order, isQrCode=None):
 
 async def get_order_full_info(order_id):
 
-    order_info = await sync_to_async(Order.objects.get_full_order, thread_sensitive=True)(order_id)
+    order = await sync_to_async(Order.objects.get_full_order, thread_sensitive=True)(order_id)
     
-    print(order_info.get("delivery"))
+    print(order.get("delivery"))
     text = f"Buyurtma ma'lumotlari\n\n"
-    # if order.delivery == 'pickup':
-    #     branch = await sync_to_async(Branch.objects.get)(id=order.branch)
+    if order.delivery == 'pickup':
+        branch = await sync_to_async(Branch.objects.get)(id=order.branch)
         
-    #     text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-    #     text += f"""Filial: <a href="{order.get('branch__location')}"><b>{order.get('branch__name')}</b></a>\n""""
-    #     text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
-    #     text += f"Telefon raqam: <b>{order.phone}</b>\n"
-    # else:
-    #     text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
-    #     text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
-    #     text += f"Telefon raqam: <b>{order.phone}</b>\n"
-    #     text += f"Manzil: <b>{order.address}</b>\n"
-    #     text += f"Location: <b>{order.location}</b>\n"
-    #     text += f"Qo'shimcha: <b>{order.addention}</b>\n\n"
+        text += f"Buyurtma turi: <b>Olib ketish</b>\n"
+        text += f"""Filial: <a href="{order.get('branch__location')}"><b>{order.get('branch__name')}</b></a>\n"""
+        text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
+        text += f"Telefon raqam: <b>{order.phone}</b>\n"
+    else:
+        text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
+        text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
+        text += f"Telefon raqam: <b>{order.phone}</b>\n"
+        text += f"Manzil: <b>{order.address}</b>\n"
+        text += f"Location: <b>{order.location}</b>\n"
+        text += f"Qo'shimcha: <b>{order.addention}</b>\n\n"
     text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
 
     return text
 
 @router.callback_query(F.data=="payment")
 async def payment_to_order(call: types.CallbackQuery, order: Order = None):
-    # order_info = await get_order_full_info(order.id)
+    # orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
+    # order_info = await get_cart_items_text(enumerate(orderItems, 1), order)
     await call.answer()
     
-    try:
-        await call.message.delete_reply_markup()
-    except:
-        pass
+    await call.message.delete_reply_markup()
     
-    # await call.message.answer("Payme orqali to'lov amalga oshirish uchun quyidagi tugmani bosing!")
+    await call.message.answer("O'zingizga qulay bo'lgan to'lov turini tanlang", reply_markup=inline.payment_type(order.id))
+    
+@router.callback_query(F.data.startswith("click_"))
+async def click_payment(call: types.CallbackQuery, state: FSMContext):
+    order_id = call.data.split("_")[1]
+    order = await Order.objects.aget(id=order_id)
+    await state.clear()
     user = await User.objects.aget(telegram_id=call.from_user.id)
     print(user.isQrCode)
-    invoice = await create_invoice(order, user.isQrCode)
+    invoice = await create_invoice(order, user.isQrCode, payment='click')
     await call.message.answer_invoice(**invoice.generate_invoice(), name='alibobo', payload=f"{order.id}")
     
 
-# @router.pre_checkout_query()
-# async def on_pre_checkout_query(
-#     pre_checkout_query: types.PreCheckoutQuery,
-# ):
-#     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+@router.callback_query(F.data.startswith("payme_"))
+async def payme_payment(call: types.CallbackQuery, state: FSMContext):
+    order_id = call.data.split("_")[1]
+    order = await Order.objects.aget(id=order_id)
+    await state.clear()
+    await call.message.delete_reply_markup()
+    user = await User.objects.aget(telegram_id=call.from_user.id)
+    print(user.isQrCode)
+    invoice = await create_invoice(order, user.isQrCode, payment='payme')
+    await call.message.answer_invoice(**invoice.generate_invoice(), name='alibobo', payload=f"{order.id}")
+
+@router.pre_checkout_query()
+async def on_pre_checkout_query( pre_checkout_query: types.PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
     
 
 @router.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
     print('successful_payment:')
+    GROUP_ID = -4554019429
+    # print(message.successful_payment)
+       
     order_id = message.successful_payment.invoice_payload
     total_amount = message.successful_payment.total_amount/100
     name = message.successful_payment.order_info.name
@@ -136,17 +160,17 @@ async def process_successful_payment(message: types.Message):
     telegram_payment_charge_id = message.successful_payment.telegram_payment_charge_id
     telegram_user_id = message.from_user.id
     telegram_user_full_name = message.from_user.full_name
-    
-    await message.answer(
-            "payment-successful",
-    )
+    provider_payment_charge_id = message.successful_payment.provider_payment_charge_id
+    # print(provider_payment_charge_id)
+
     await Payment.objects.aupdate_or_create(
         order_id=order_id,
         defaults={
         "amount":total_amount,
         "full_name":name,
         "phone":phone,
-        "telegram_payment_charge_id":telegram_payment_charge_id
+        "telegram_payment_charge_id":telegram_payment_charge_id,
+        "provider_payment_charge_id":provider_payment_charge_id
         }
     )   
     
@@ -155,45 +179,46 @@ async def process_successful_payment(message: types.Message):
     order.status = 'completed'
     await order.asave() 
     
-    # order_info = await get_order_full_info(order.id)
+    orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
+    order_info = await get_cart_items_text(enumerate(orderItems, 1), order)
     
-    check_sell1 =  f"#PAYMENT ID: {telegram_payment_charge_id}\n\n"
+    check_sell1 =  f"PAYMENT ID: {telegram_payment_charge_id}\n\n"
     check_sell = f"Order ID: {order_id}\n"
     check_sell +=  f"To'lov: {total_amount} UZS\n"
     check_sell += f"Telegram user: [{telegram_user_full_name}](tg://user?id={telegram_user_id})\n"
     check_sell +=  f"Xaridor: {name}\n"
     check_sell +=  f"Tel: {phone}\n"
     
-    await bot.send_message(chat_id=settings.ADMINS[0],
+    await bot.send_message(chat_id=GROUP_ID,
                            text=check_sell1+check_sell,     
                            parse_mode=ParseMode.MARKDOWN                                                         
                             )
  
-    # await bot.send_message(chat_id=settings.ADMINS[0],
-    #                        text=order_info,     
-    #                        parse_mode=ParseMode.MARKDOWN                                                         
-    #                         )
+    await bot.send_message(chat_id=GROUP_ID,
+                           text=order_info,     
+                           parse_mode=ParseMode.MARKDOWN                                                         
+                            )
     await message.answer("To'lovingiz qabul qilindi.  \n  Operatorlarimizning siz bilan bog'lanishini kuting. \n 📲 Call-Markaz: +998932977419")
     await message.answer("Asosiy menyu", reply_markup=inline.main_btn)
     
     
-@router.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
-#     user_id = pre_checkout_query.from_user.id
-#     payment_id=pre_checkout_query.id
-#     name = pre_checkout_query.order_info.name
-#     phone = pre_checkout_query.order_info.phone_number
-#     total_amount = pre_checkout_query.total_amount/100
-#     payload = pre_checkout_query.invoice_payload
-#     print(payload)
+# @router.pre_checkout_query()
+# async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
+# #     user_id = pre_checkout_query.from_user.id
+# #     payment_id=pre_checkout_query.id
+# #     name = pre_checkout_query.order_info.name
+# #     phone = pre_checkout_query.order_info.phone_number
+# #     total_amount = pre_checkout_query.total_amount/100
+# #     payload = pre_checkout_query.invoice_payload
+# #     print(payload)
     
-    await bot.answer_pre_checkout_query(pre_checkout_query_id=pre_checkout_query.id, ok=True)
+#     await bot.answer_pre_checkout_query(pre_checkout_query_id=pre_checkout_query.id, ok=True)
     
     
-    # db.add_sells_products(user_id, check_sell, check_sell1, date)
+#     # db.add_sells_products(user_id, check_sell, check_sell1, date)
     
-    # await bot.send_message(chat_id=CHANEL_CHAT_ID,
-    #                        text=check_sell1+check_sell,
+#     # await bot.send_message(chat_id=CHANEL_CHAT_ID,
+#     #                        text=check_sell1+check_sell,
                            
                                                                                            
-    #                         )
+#     #                         )

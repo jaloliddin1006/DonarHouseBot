@@ -97,3 +97,17 @@ pay_btn = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+def payment_type(order_id):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="💳 Payme", callback_data=f"payme_{order_id}"),
+                InlineKeyboardButton(text="💳 Click", callback_data=f"click_{order_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="⬅️ Ortga", callback_data="mycart"),
+            ],
+        ]
+    )

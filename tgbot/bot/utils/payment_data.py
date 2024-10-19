@@ -16,7 +16,7 @@ class Product:
     start_parameter: str
     currency: str
     prices: List[LabeledPrice]
-    provider_data: dict = None
+    provider_data: str = None
     photo_url: str = None
     photo_size: int = None
     photo_width: int = None
@@ -31,7 +31,7 @@ class Product:
     # max_tip_amount: int = None
     # suggested_tip_amounts: List[int] = None,
 
-    provider_token: str = settings.PAYMENT_TOKEN
+    provider_token: str = settings.PAYMENT_TOKEN_CLICK
 
     def generate_invoice(self):
         return self.__dict__

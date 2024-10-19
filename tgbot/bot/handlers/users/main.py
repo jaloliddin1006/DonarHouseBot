@@ -19,7 +19,7 @@ import os
 
 router = Router()
 
-
+# TODO: commandlar to'g'irlanib qo'shib chiqilishi kerak
 @router.message(F.text == "/mycart")
 async def my_cart_message(message: types.Message, state: FSMContext):
 
