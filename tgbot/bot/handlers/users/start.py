@@ -58,11 +58,11 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
         except Exception as error:
             logger.info(f"Data did not send to admin: {admin}. Error: {error}")
             
-    if created:
-        await state.set_state(RegistrationState.language)
-        await message.answer("Muloqot tilini tanlang", reply_markup=inline.language_btn)
-    else:
-        await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? ", reply_markup=inline.main_btn)
+    # if created:
+    #     await state.set_state(RegistrationState.language)
+    #     await message.answer("Muloqot tilini tanlang", reply_markup=inline.language_btn)
+    # else:
+    await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
         
 
 
@@ -108,7 +108,7 @@ async def set_phone(message: types.Message, state: FSMContext):
     )
     await state.clear()
     await message.answer("Marhamat botdan foydalanib buyurtma berishingiz mumkin.", reply_markup=reply.rmk)
-    await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? ", reply_markup=inline.main_btn)
+    await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
     
     
 @router.message(StateFilter(RegistrationState.phone), ~F.contact)

@@ -43,7 +43,7 @@ async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
     category_id = int(call.data.split("_")[1])
     await call.message.delete()
     if category_id == 0:
-        await call.message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? ", reply_markup=inline.main_btn)
+        await call.message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
         return True
     
     sub_categories = await sync_to_async(list)(Category.objects.sub_ctg(id=category_id))

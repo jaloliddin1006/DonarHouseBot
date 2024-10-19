@@ -59,6 +59,7 @@ async def branches(call: types.CallbackQuery, state=FSMContext):
     
 @router.callback_query(F.data.startswith("branch_"))
 async def get_branch(call: types.CallbackQuery, state=FSMContext):
+    await call.answer()
     branch_id = int(call.data.split("_")[1])
     if branch_id == 0:
         await call.message.delete()
