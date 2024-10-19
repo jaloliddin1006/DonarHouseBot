@@ -2,7 +2,10 @@ import os
 from pathlib import Path
 from environs import Env
 
-if not os.path.exists('.env'):
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+if not os.path.exists(os.path.join(BASE_DIR,'.env')):
     print(".env fayli topilmadi!\n\n"
           ".env.example faylidan nusxa ko'chirib shablonni o'zingizga moslang.")
     exit(1)
@@ -30,11 +33,6 @@ else:
     PAYMENT_TOKEN_CLICK = env.str("TEST_PAYMENT_TOKEN_CLICK")
     PAYMENT_TOKEN_PAYMEE = env.str("TEST_PAYMENT_TOKEN_PAYMEE")
     
-
-
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 ALLOWED_HOSTS = ['*']
 

@@ -4,8 +4,8 @@ from tgbot.models import Branch, User, Category, Product, Order, OrderItem
 
 
 async def get_cart_items_text(orderItems: list, order: Order = None):
-    print(orderItems)
-    print(order)
+    # print(orderItems)
+    # print(order)
     total_price = 0
     text = "Sizning savatingizda quidagilar mavjud: \n\n"
     for index, item in orderItems:

@@ -180,7 +180,7 @@ async def process_successful_payment(message: types.Message):
     await order.asave() 
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
-    order_info = await get_cart_items_text(enumerate(orderItems, 1), order)
+    order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order)
     
     check_sell1 =  f"PAYMENT ID: {telegram_payment_charge_id}\n\n"
     check_sell = f"Order ID: {order_id}\n"
