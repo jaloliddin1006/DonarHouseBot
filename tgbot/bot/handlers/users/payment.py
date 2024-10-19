@@ -196,7 +196,7 @@ async def process_successful_payment(message: types.Message):
  
     await bot.send_message(chat_id=GROUP_ID,
                            text=order_info,     
-                           parse_mode=ParseMode.MARKDOWN                                                         
+                           parse_mode=ParseMode.HTML                                                         
                             )
     await message.answer("To'lovingiz qabul qilindi.  \n  Operatorlarimizning siz bilan bog'lanishini kuting. \n 📲 Call-Markaz: +998932977419")
     await message.answer("Asosiy menyu", reply_markup=inline.main_btn)
