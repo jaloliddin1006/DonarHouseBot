@@ -77,3 +77,15 @@ async def get_branch(call: types.CallbackQuery, state=FSMContext):
 async def about_us(call: types.CallbackQuery, state=FSMContext):
     about = await About.objects.alast()
     await call.message.edit_text(about.description, reply_markup=inline.back_btn, parse_mode=ParseMode.MARKDOWN)
+    
+
+@router.callback_query(F.data.startswith("lang_"))
+async def change_language(call: types.CallbackQuery):
+    lang_code = call.data.split("_")[1]
+    user = await User.objects.aget(telegram_id=call.from_user.id)
+    user.language_code = lang_code
+    await user.asave()
+    await call.message.edit_text(
+        f"Til muvaffaqiyatli o'zgartirildi: {lang_code.upper()}",
+        reply_markup=None
+    )

@@ -9,3 +9,4 @@ geopy~=2.4.1
 django-markdownx~=4.0.7
 django-jazzmin~=3.0.1
 # aiogram_i18n~=1.4
+django-modeltranslation~=0.19.11

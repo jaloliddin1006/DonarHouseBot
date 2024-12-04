@@ -21,7 +21,7 @@ router = Router()
 
 
 @router.callback_query(F.data == "categories") 
-async def categories(call: types.CallbackQuery, state=FSMContext):
+async def categories(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     await call.message.delete()
     text = "Kategoriyalardan birini tanlang"
     user_cart = False
@@ -32,7 +32,7 @@ async def categories(call: types.CallbackQuery, state=FSMContext):
     if userOrder:
         orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
         if orderItems:
-            text = await get_cart_items_text(list(enumerate(orderItems, 1)))
+            text = await get_cart_items_text(list(enumerate(orderItems, 1)), user_language=user_language)
             user_cart = True
             
     categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
@@ -109,7 +109,7 @@ async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValu
 
 
 @router.callback_query(F.data == "mycart")
-async def my_cart(call: types.CallbackQuery, state=FSMContext):
+async def my_cart(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     user_tg_id = call.from_user.id
     
     user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
@@ -130,7 +130,7 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
     else:
         order = None
         
-    text = await get_cart_items_text(list(enumerate(orderItems, 1)), order)
+    text = await get_cart_items_text(list(enumerate(orderItems, 1)), order, user_language)
         
     # total_price = 0
     # text = "Sizning savatingizda quidagilar mavjud: \n\n"
@@ -149,7 +149,7 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext):
 
 
 @router.callback_query(F.data.startswith("changeproducts_"))
-async def change_products(call: types.CallbackQuery, state=FSMContext):
+async def change_products(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     user_tg_id = call.from_user.id
     cart_id = int(call.data.split("_")[1])
     userOrder = await sync_to_async(Order.objects.get)(id=cart_id)
@@ -165,7 +165,7 @@ async def change_products(call: types.CallbackQuery, state=FSMContext):
     # else:
     #     order = None
         
-    text = await get_cart_items_text(list(enumerate(orderItems, 1)))
+    text = await get_cart_items_text(list(enumerate(orderItems, 1)), user_language=user_language)
     
     await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), cart_id), parse_mode=ParseMode.HTML)
     
@@ -318,7 +318,7 @@ async def get_full_name(message: types.Message, state=FSMContext):
     
     
 @router.message(StateFilter(CreateOrderState.confirm))
-async def confirm_data_func(message: types.Message, state=FSMContext):
+async def confirm_data_func(message: types.Message, state=FSMContext, user_language: str = 'uz'):
     data = await state.get_data()
     await state.clear()
     
@@ -343,7 +343,7 @@ async def confirm_data_func(message: types.Message, state=FSMContext):
         await order.asave()
         
         orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
-        order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order)
+        order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order, user_language)
         await message.answer(order_info, reply_markup=reply.rmk)
         
         await message.answer("O'zingizga qulay bo'lgan to'lov turini tanlang", reply_markup=inline.payment_type(order.id))

@@ -44,6 +44,7 @@ TESTING = True
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation',
     "debug_toolbar",
     'jazzmin',
     'django.contrib.admin',
@@ -134,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-US'
+LANGUAGE_CODE = 'uz'
 
 TIME_ZONE = 'Asia/Tashkent'
 
@@ -145,12 +146,19 @@ USE_TZ = True
 LANGUAGES = [
     ('uz', 'O‘zbekcha'),
     ('ru', 'Русский'),
-    ('en', 'English'),
 ]
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz' 
+MODELTRANSLATION_LANGUAGES = ('uz', 'ru')  
+MODELTRANSLATION_PREPOPULATE_LANGUAGE = 'uz' 
+
+MODELTRANSLATION_TRANSLATION_FILES = (
+    'tgbot.translation',
+)
 
 # Tarjima fayllari joylashgan joy
 LOCALE_PATHS = [
-    BASE_DIR / 'locale',
+    os.path.join(BASE_DIR, 'tgbot', 'locale'),
 ]
 
 # Static files (CSS, JavaScript, Images)

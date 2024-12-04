@@ -148,7 +148,7 @@ async def on_pre_checkout_query( pre_checkout_query: types.PreCheckoutQuery):
     
 
 @router.message(F.successful_payment)
-async def process_successful_payment(message: types.Message):
+async def process_successful_payment(message: types.Message, user_language: str='uz'):
     print('successful_payment:')
     GROUP_ID = -4554019429
     # print(message.successful_payment)
@@ -180,7 +180,7 @@ async def process_successful_payment(message: types.Message):
     await order.asave() 
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
-    order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order)
+    order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order, user_language)
     
     check_sell1 =  f"PAYMENT ID: {telegram_payment_charge_id}\n\n"
     check_sell = f"Order ID: {order_id}\n"

@@ -1,40 +1,41 @@
 from asgiref.sync import sync_to_async
 from tgbot.bot.loader import bot, STICERS
-from tgbot.models import Branch, User, Category, Product, Order, OrderItem
+from tgbot.models import Branch, Order
+from tgbot.bot.utils.all_texts import BOT_WORDS
 
 
-async def get_cart_items_text(orderItems: list, order: Order = None):
+async def get_cart_items_text(orderItems: list, order: Order = None, user_language: str = 'uz'):
     # print(orderItems)
     # print(order)
     total_price = 0
-    text = "Sizning savatingizda quidagilar mavjud: \n\n"
+    text = f"{BOT_WORDS['your_bucket'].get(user_language)}: \n\n"
     for index, item in orderItems:
-        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
-        text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} so'm => {item.get("total_price")} so'm\n\n"""
+        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> \n """
+        text += f"""  >  {item.get("quantity")}  x  {int(item.get("product__price"))} UZS => {item.get("total_price")} UZS\n\n"""
         total_price += item.get("total_price")
         
-    text += f"<b>Jami: {total_price} so'm </b>\n\n"
+    text += f"{BOT_WORDS['all'].get(user_language)}<b>: {total_price} UZS </b>\n\n"
     
     if order:
-        text += "Buyurtma ma'lumotlari:\n\n"
-        text += f"Buyurtma Raqami: <b>#{order.id}</b>\n"
+        text += f"{BOT_WORDS['order_info'].get(user_language)}:\n\n"
+        text += f"{BOT_WORDS['order_id'].get(user_language)}: <b>#{order.id}</b>\n"
         if order.delivery == 'pickup':
             branch = await sync_to_async(Branch.objects.get)(id=order.branch_id)
             
-            text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-            text += f"Filial: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
-            text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
-            text += f"Telefon raqam: <b>{order.phone}</b>\n"
+            text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>{BOT_WORDS['pickup'].get(user_language)}</b>\n"
+            text += f"{BOT_WORDS['branch'].get(user_language)}: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
+            text += f"{BOT_WORDS['order_user'].get(user_language)}: <b>{order.full_name}</b>\n"
+            text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{order.phone}</b>\n"
         else:
-            text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
-            text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
-            text += f"Telefon raqam: <b>{order.phone}</b>\n"
-            text += f"Manzil: <b>{order.address}</b>\n"
-            text += f"Qo'shimcha: <b>{order.addention}</b>\n"
+            text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>{BOT_WORDS['delivery'].get(user_language)}</b>\n"
+            text += f"{BOT_WORDS['order_user_input'].get(user_language)}: <b>{order.full_name}</b>\n"
+            text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{order.phone}</b>\n"
+            text += f"{BOT_WORDS['order_address'].get(user_language)}: <b>{order.address}</b>\n"
+            text += f"{BOT_WORDS['order_addention'].get(user_language)}: <b>{order.addention}</b>\n"
         if order.is_paid:
-            text += "Buyurtma holati: <b>To'lov amalga oshirildi</b>"
+            text += f"{BOT_WORDS['order_status'].get(user_language)}: <b>{BOT_WORDS['payment_success'].get(user_language)}</b>"
         else:
-            text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
+            text += f"{BOT_WORDS['order_status'].get(user_language)}: <b>{BOT_WORDS['payment_wait'].get(user_language)}</b>"
     
     return text
 

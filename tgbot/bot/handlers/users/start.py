@@ -12,7 +12,7 @@ from tgbot.models import User
 from tgbot.bot.loader import bot
 from tgbot.bot.utils.extra_datas import make_title
 from tgbot.bot.states.main import RegistrationState
-
+from tgbot.bot.utils.all_texts import BOT_WORDS
 
 router = Router()
 
@@ -21,7 +21,7 @@ router = Router()
 # async def do_start(message: types.Message, state: FSMContext, command: CommandObject):
     
 @router.message(CommandStart())
-async def do_start(message: types.Message, state: FSMContext, command: CommandObject):
+async def do_start(message: types.Message, state: FSMContext, command: CommandObject, user_language: str):
     await state.clear()
     qrcode=False
     if command.args is not None:
@@ -31,7 +31,9 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
             
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
-    await message.answer(f"Assalomu alaykum {full_name}! ", parse_mode=ParseMode.MARKDOWN)
+    greeting = BOT_WORDS['hello'].get(user_language, BOT_WORDS['hello']['uz'])
+
+    await message.answer(f"{greeting} {full_name}! ", parse_mode=ParseMode.MARKDOWN)
     user, created = await User.objects.aget_or_create(
         telegram_id=telegram_id,
     )
@@ -58,26 +60,26 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
         except Exception as error:
             logger.info(f"Data did not send to admin: {admin}. Error: {error}")
             
-    # if created:
-    #     await state.set_state(RegistrationState.language)
-    #     await message.answer("Muloqot tilini tanlang", reply_markup=inline.language_btn)
-    # else:
-    await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
+    if created:
+        await state.set_state(RegistrationState.language)
+        await message.answer(f"{BOT_WORDS['choose_lang'].get(user_language)}", reply_markup=inline.language_btn)
+    else:
+        await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
         
 
 
 @router.callback_query(StateFilter(RegistrationState.language))
-async def set_language(call: types.CallbackQuery, state: FSMContext):
+async def set_language(call: types.CallbackQuery, state: FSMContext, user_language: str):
     language = call.data
     await state.update_data(language_code=language)
     await call.message.delete()
     await state.set_state(RegistrationState.location)
-    await call.message.answer("Lokatsiyangizni yuboring", reply_markup=reply.location_btn)
+    await call.message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn)
     await call.answer()
 
 
 @router.message(StateFilter(RegistrationState.location), F.location)
-async def set_location(message: types.Message, state: FSMContext):
+async def set_location(message: types.Message, state: FSMContext, user_language: str):
     location = message.location
     location_url = f"https://maps.google.de/maps?q={location.latitude},{location.longitude}&z=17&t=m"
     address = await get_address(location.latitude, location.longitude)
@@ -86,16 +88,16 @@ async def set_location(message: types.Message, state: FSMContext):
         "address": address
     })
     await state.set_state(RegistrationState.phone)
-    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn)
     
     
 @router.message(StateFilter(RegistrationState.location), ~F.location)
-async def not_location(message: types.Message):
-    await message.answer("Lokatsiyangizni yuboring", reply_markup=reply.location_btn)
+async def not_location(message: types.Message, user_language: str):
+    await message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn)
 
 
 @router.message(StateFilter(RegistrationState.phone), F.contact)
-async def set_phone(message: types.Message, state: FSMContext):
+async def set_phone(message: types.Message, state: FSMContext, user_language: str):
     phone = message.contact.phone_number
     await state.update_data(phone=phone)
     data = await state.get_data()
@@ -107,11 +109,11 @@ async def set_phone(message: types.Message, state: FSMContext):
         language_code=data.get("language_code")
     )
     await state.clear()
-    await message.answer("Marhamat botdan foydalanib buyurtma berishingiz mumkin.", reply_markup=reply.rmk)
-    await message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
+    await message.answer(f"{BOT_WORDS['start_for_use'].get(user_language)}", reply_markup=reply.rmk)
+    await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
     
     
 @router.message(StateFilter(RegistrationState.phone), ~F.contact)
-async def not_phone(message: types.Message):
-    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+async def not_phone(message: types.Message, user_language: str):
+    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn)
     

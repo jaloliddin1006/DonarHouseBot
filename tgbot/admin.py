@@ -11,7 +11,7 @@ from tgbot.models import User as TelegramUser, BotAdmin, Category, Product, Abou
 @admin.register(TelegramUser)
 class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "full_name", "username", "telegram_id", "language_code", "phone", "isQrCode", 'is_active', 'created_at')
-    readonly_fields = ("full_name", "username", "telegram_id", "language_code", "phone", "address", "location", )
+    # readonly_fields = ("full_name", "username", "telegram_id", "language_code", "phone", "address", "location", )
     search_fields = ("full_name", "username", "telegram_id", )
     list_per_page = 50
     list_display_links = ('id', 'full_name')
@@ -36,10 +36,10 @@ class BotAdminsAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "name"
-    list_display = ('tree_actions', 'indented_title',
+    list_display = ('tree_actions', 'id', 'indented_title',
                     # 'related_products_count', 'related_products_cumulative_count'
                     )
-    list_display_links = ('indented_title',)
+    list_display_links = ('indented_title', 'id')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

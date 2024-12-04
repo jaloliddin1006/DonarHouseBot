@@ -2,7 +2,7 @@ from django.db import models
 from markdownx.models import MarkdownxField
 from mptt.models import MPTTModel, TreeForeignKey
 from tgbot.managers import CategoryManager, OrderItemManager, OrderManager, ProductManager
-
+from django.conf import settings
 
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -14,10 +14,11 @@ class BaseModel(models.Model):
 
 
 class User(BaseModel):
+    
     telegram_id = models.PositiveBigIntegerField(unique=True)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     username = models.CharField(max_length=128, null=True, blank=True)
-    language_code = models.CharField(max_length=10, null=True, default="uz")
+    language_code = models.CharField(max_length=10, null=True, default="uz", choices=settings.LANGUAGES)
     phone = models.CharField(max_length=50, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
@@ -93,7 +94,7 @@ class Product(BaseModel):
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Narxi")
     image = models.ImageField(upload_to='products', null=True, blank=True, verbose_name="Rasm")
     description = models.TextField(null=True, blank=True, verbose_name="Tavsif")
-    discount = models.PositiveIntegerField(default=0, verbose_name="Chegirma (%)")
+    discount = models.PositiveIntegerField(default=0, verbose_name="Chegirma (so'm)")
     
     objects = ProductManager()
 

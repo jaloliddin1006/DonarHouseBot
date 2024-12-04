@@ -34,7 +34,7 @@ async def pagination_handler(call: CallbackQuery, callback_data: fabrics.Product
 
 
 @router.callback_query(fabrics.ChangeOrderProductsValue.filter(F.action.startswith('remove') | F.action.startswith('add')))
-async def change_order_products_value(call: CallbackQuery, callback_data: fabrics.ChangeOrderProductsValue):
+async def change_order_products_value(call: CallbackQuery, callback_data: fabrics.ChangeOrderProductsValue, user_language: str='uz'):
     await call.answer()
     action = callback_data.action.split('_')[0]
     orderItemId = callback_data.orderItemId
@@ -54,7 +54,7 @@ async def change_order_products_value(call: CallbackQuery, callback_data: fabric
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=orderId))
     
     # orderItems = list(enumerate(orderItems, 1))
-    text = await get_cart_items_text(list(enumerate(orderItems, 1)))
+    text = await get_cart_items_text(list(enumerate(orderItems, 1)), user_language=user_language)
     # print(text)
     with suppress(TelegramBadRequest):
         await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), orderId))
