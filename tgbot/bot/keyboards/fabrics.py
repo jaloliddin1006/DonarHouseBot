@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 from tgbot.bot.loader import bot, STICERS
+from tgbot.bot.utils.all_texts import BUTTON_TEXTS
 
 
 class Pagination(CallbackData, prefix='pag'):
@@ -27,7 +28,7 @@ class ProductValue(CallbackData, prefix='pag'):
     category_id: int
 
 
-def value_compressor(cnt: int = 0, pro_id: int = 0, ctg_id: int = 0):
+def value_compressor(cnt: int = 0, pro_id: int = 0, ctg_id: int = 0, lang: str = "uz"):
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(text="➖", callback_data=ProductValue(action="remove", count=cnt, product_id=pro_id, category_id=ctg_id).pack()),
@@ -37,8 +38,8 @@ def value_compressor(cnt: int = 0, pro_id: int = 0, ctg_id: int = 0):
 
     )
     builder.row(
-        InlineKeyboardButton(text="🛒 Savatga qo'shish", callback_data=ProductValue(action=f"addcart", count=cnt, product_id=pro_id, category_id=ctg_id).pack()),
-        InlineKeyboardButton(text="⬅️ Ortga", callback_data=f"category_{ctg_id}"),
+        InlineKeyboardButton(text=f"{BUTTON_TEXTS['add_cart'][lang]}", callback_data=ProductValue(action=f"addcart", count=cnt, product_id=pro_id, category_id=ctg_id).pack()),
+        InlineKeyboardButton(text=f"{BUTTON_TEXTS['back'][lang]}", callback_data=f"category_{ctg_id}"),
         width=1        
     )
     return builder.as_markup()
@@ -50,7 +51,7 @@ class ChangeOrderProductsValue(CallbackData, prefix='pag'):
     orderItemId: int
     order_id: int
 
-def change_values(orderItems: list = [], order_id: int = 0):
+def change_values(orderItems: list = [], order_id: int = 0, lang: str = "uz"):
     builder = InlineKeyboardBuilder()
     for index, item in orderItems:
         builder.row(
@@ -61,8 +62,8 @@ def change_values(orderItems: list = [], order_id: int = 0):
             width=3
         )
     builder.row(
-        InlineKeyboardButton(text="🔄 Savatni Bo'shatish", callback_data="clearOrder"),
-        InlineKeyboardButton(text="⬅️ Ortga", callback_data="mycart"),
+        InlineKeyboardButton(text=f"{BUTTON_TEXTS['clear_cart'][lang]}", callback_data="clearOrder"),
+        InlineKeyboardButton(text=f"{BUTTON_TEXTS['back'][lang]}", callback_data="mycart"),
         width=1
     )
     return builder.as_markup()

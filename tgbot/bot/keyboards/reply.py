@@ -4,6 +4,7 @@ from aiogram.types import (
     KeyboardButtonPollType,
     ReplyKeyboardRemove
 )
+from tgbot.bot.utils.all_texts import BUTTON_TEXTS
 
 main = ReplyKeyboardMarkup(
     keyboard=[
@@ -43,10 +44,11 @@ maxsus_btn = ReplyKeyboardMarkup(
 
 rmk = ReplyKeyboardRemove()
 
-back_btn = ReplyKeyboardMarkup(
+def back_btn(lang='uz'):
+    return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="⬅️ Ortga"),
+                KeyboardButton(text=BUTTON_TEXTS["back"][lang]),
             ],
         ],
         resize_keyboard=True,
@@ -54,47 +56,11 @@ back_btn = ReplyKeyboardMarkup(
     )
 
 
-location_btn = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="📍 Geo-Manzilni yuborish", request_location=True),
-        ],
-    ],
-    resize_keyboard=True,
-    one_time_keyboard=True,
-)
-
-
-phone_btn = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="☎️ Telefon raqamni yuborish", request_contact=True),
-        ],
-    ],
-    resize_keyboard=True,
-    one_time_keyboard=True,
-)
-
-
-delivery_type_btn = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="🚕 Yetkazib berish"),
-            KeyboardButton(text="🏃 Olib ketish"),
-        ],
-    ],
-    resize_keyboard=True,
-    one_time_keyboard=True,
-)
-
-
-get_address_btn = ReplyKeyboardMarkup(
+def location_btn(lang='uz'):
+    return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📍 Geo-Manzilni yuborish", request_location=True),
-            ],
-            [
-                KeyboardButton(text="⬅️ Ortga"),
+                KeyboardButton(text=BUTTON_TEXTS["send_location"][lang], request_location=True),
             ],
         ],
         resize_keyboard=True,
@@ -102,11 +68,52 @@ get_address_btn = ReplyKeyboardMarkup(
     )
 
 
-address_confirmation = ReplyKeyboardMarkup(
+def phone_btn(lang='uz'):
+    return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="✅ To'g'ri"),
-                KeyboardButton(text="❌ Noto'g'ri"),
+                KeyboardButton(text=BUTTON_TEXTS["send_phone"][lang], request_contact=True),
+            ],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def delivery_type_btn(lang='uz'):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=BUTTON_TEXTS["delivery"][lang]),
+                KeyboardButton(text=BUTTON_TEXTS["pickup"][lang]),
+            ],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def get_address_btn(lang='uz'):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=BUTTON_TEXTS["send_location"][lang], request_location=True),
+            ],
+            [
+                KeyboardButton(text=BUTTON_TEXTS["back"][lang]),
+            ],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def address_confirmation(lang='uz'):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=BUTTON_TEXTS["correct"][lang]),
+                KeyboardButton(text=BUTTON_TEXTS["incorrect"][lang]),
             ],
         ],
         resize_keyboard=True,

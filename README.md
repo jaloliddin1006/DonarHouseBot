@@ -37,3 +37,14 @@ service ni yozib bo'lgandan so'ng uni ishga tushirib qo'yamiz:
 
 # restore backup file
 `psql -U db_user db_name < backup.sql`
+
+
+
+#
+
+### Django'da loaddata buyrug'i orqali fixturalarni bazaga yuklash mumkin.
+`python manage.py loaddata initial_data.json`
+
+
+### Agar mavjud ma'lumotlar asosida fixtura yaratmoqchi bo'lsangiz, dumpdata buyrug'idan foydalaning:
+`python manage.py dumpdata tgbot.About tgbot.Branch --indent 4 > tgbot/fixtures/initial_data.json`

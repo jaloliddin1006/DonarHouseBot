@@ -16,7 +16,7 @@ from PIL import Image
 from io import BytesIO
 import os
 from django.conf import settings
-
+from tgbot.bot.utils.all_texts import BOT_WORDS
 
 router = Router()    
 
@@ -86,39 +86,39 @@ async def create_invoice(order: Order, isQrCode=None, payment='click'):
     
     return invoice
 
-async def get_order_full_info(order_id):
+async def get_order_full_info(order_id, user_language='uz'):
 
     order = await sync_to_async(Order.objects.get_full_order, thread_sensitive=True)(order_id)
     
-    print(order.get("delivery"))
-    text = f"Buyurtma ma'lumotlari\n\n"
+    # print(order.get("delivery"))
+    text = f"{BOT_WORDS['order_info'].get(user_language)}\n\n"
     if order.delivery == 'pickup':
-        branch = await sync_to_async(Branch.objects.get)(id=order.branch)
+        # branch = await sync_to_async(Branch.objects.get)(id=order.branch)
         
-        text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-        text += f"""Filial: <a href="{order.get('branch__location')}"><b>{order.get('branch__name')}</b></a>\n"""
-        text += f"Olib ketuvchi: <b>{order.full_name}</b>\n"
-        text += f"Telefon raqam: <b>{order.phone}</b>\n"
+        text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>Olib ketish</b>\n"
+        text += f"""{BOT_WORDS['branch'].get(user_language)}: <a href="{order.get('branch__location')}"><b>{order.get('branch__name')}</b></a>\n"""
+        text += f"{BOT_WORDS['order_user'].get(user_language)}: <b>{order.full_name}</b>\n"
+        text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{order.phone}</b>\n"
     else:
-        text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
-        text += f"Qabul qiluvchi: <b>{order.full_name}</b>\n"
-        text += f"Telefon raqam: <b>{order.phone}</b>\n"
-        text += f"Manzil: <b>{order.address}</b>\n"
-        text += f"Location: <b>{order.location}</b>\n"
-        text += f"Qo'shimcha: <b>{order.addention}</b>\n\n"
-    text += "Buyurtma holati: <b>To'lov kutilmoqda</b>"
+        text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>Yetkazib berish</b>\n"
+        text += f"{BOT_WORDS['order_user_input'].get(user_language)}: <b>{order.full_name}</b>\n"
+        text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{order.phone}</b>\n"
+        text += f"{BOT_WORDS['order_address'].get(user_language)}: <b>{order.address}</b>\n"
+        text += f"{BOT_WORDS['location'].get(user_language)}: <b>{order.location}</b>\n"
+        text += f"{BOT_WORDS['order_addention'].get(user_language)}: <b>{order.addention}</b>\n\n"
+    text += f"{BOT_WORDS['order_status'].get(user_language)}: <b>{BOT_WORDS['payment_wait'].get(user_language)}</b>"
 
     return text
 
 @router.callback_query(F.data=="payment")
-async def payment_to_order(call: types.CallbackQuery, order: Order = None):
+async def payment_to_order(call: types.CallbackQuery, order: Order = None, user_language: str='uz'):
     # orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
     # order_info = await get_cart_items_text(enumerate(orderItems, 1), order)
     await call.answer()
     
     await call.message.delete_reply_markup()
     
-    await call.message.answer("O'zingizga qulay bo'lgan to'lov turini tanlang", reply_markup=inline.payment_type(order.id))
+    await call.message.answer(f"{BOT_WORDS['choose_payment_type'].get(user_language)}", reply_markup=inline.payment_type(order.id, user_language))
     
 @router.callback_query(F.data.startswith("click_"))
 async def click_payment(call: types.CallbackQuery, state: FSMContext):

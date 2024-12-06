@@ -37,14 +37,14 @@ async def message_format_func(message: types.Message, state=FSMContext):
 
 
 @router.message(MessageState.message, F.text)
-async def message_format_func(message: types.Message, state=FSMContext):
+async def message_format_func(message: types.Message, state=FSMContext, user_language='uz'):
     msg = message.text
     await message.answer("Xabar yuborildi!", reply_markup=reply.main)
     await state.clear()
 
 
 @router.message(MessageState.message, ~F.text)
-async def message_format_func(message: types.Message, state=FSMContext):
+async def message_format_func(message: types.Message, state=FSMContext, user_language='uz'):
     await message.answer("Hozirda faqat matnli xabar yubora olasiz!!!", reply_markup=reply.main)
     await state.clear()
 

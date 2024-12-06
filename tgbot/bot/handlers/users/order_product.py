@@ -11,11 +11,13 @@ from tgbot.bot.loader import bot, STICERS
 from tgbot.bot.handlers.users.main import my_cart_message
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
 from tgbot.bot.states.main import CreateOrderState
+from tgbot.bot.utils.all_texts import BOT_WORDS, REGISTER_TEXTS
 from tgbot.utils import get_address
 from tgbot.models import Branch, User, Category, Product, Order, OrderItem
 from PIL import Image
 from io import BytesIO
 
+from tgbot.bot.utils.all_texts import BUTTON_TEXTS
 
 router = Router()    
 
@@ -23,7 +25,7 @@ router = Router()
 @router.callback_query(F.data == "categories") 
 async def categories(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     await call.message.delete()
-    text = "Kategoriyalardan birini tanlang"
+    text = f"{REGISTER_TEXTS['choose_ctg'].get(user_language)}"
     user_cart = False
     
     user_tg_id = call.from_user.id
@@ -36,14 +38,15 @@ async def categories(call: types.CallbackQuery, state=FSMContext, user_language:
             user_cart = True
             
     categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
-    await call.message.answer(text, reply_markup=builders.get_categories_btn(categories, f"category_{0}", user_cart), parse_mode=ParseMode.HTML)
+    await call.message.answer(text, reply_markup=builders.get_categories_btn(categories, f"category_{0}", user_cart, lang=user_language), parse_mode=ParseMode.HTML)
+
 
 @router.callback_query(F.data.startswith("category_"))
-async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
+async def get_subcategories(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     category_id = int(call.data.split("_")[1])
     await call.message.delete()
     if category_id == 0:
-        await call.message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? \n\n<a href='https://telegra.ph/Taomnoma-09-30'>Donar House Menu </a>", reply_markup=inline.main_btn)
+        await call.message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
         return True
     
     sub_categories = await sync_to_async(list)(Category.objects.sub_ctg(id=category_id))
@@ -52,44 +55,44 @@ async def get_subcategories(call: types.CallbackQuery, state=FSMContext):
     photo = FSInputFile(category.image.path)  
     if sub_categories:
         if sub_categories[0].level == 1:
-            await call.message.answer_photo(photo=photo, caption="Sub Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(sub_categories, f"categories"))
+            await call.message.answer_photo(photo=photo, caption=f"{REGISTER_TEXTS['choose_ctg'].get(user_language)}", reply_markup=builders.get_categories_btn(sub_categories, f"categories", lang=user_language))
         else:
-            await call.message.answer_photo(photo=photo, caption="Sub kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(sub_categories, f"category_{sub_categories[0].parent_id}"))
+            await call.message.answer_photo(photo=photo, caption=f"{REGISTER_TEXTS['choose_ctg'].get(user_language)}", reply_markup=builders.get_categories_btn(sub_categories, f"category_{sub_categories[0].parent_id}", lang=user_language))
         return True
     
     products = await sync_to_async(list)(Product.objects.get_ctg_products(category_id=category_id))
     if products:
         if products[0].get("category__parent_id"):
-            await call.message.answer_photo(photo=photo, caption="Maxsulotlardan birini tanlang", reply_markup=builders.get_products_btn(products, f"category_{products[0].get('category__parent_id')}"))
+            await call.message.answer_photo(photo=photo, caption=f"{REGISTER_TEXTS['choose_product'].get(user_language)}", reply_markup=builders.get_products_btn(products, f"category_{products[0].get('category__parent_id')}", lang=user_language))
         else:
-            await call.message.answer_photo(photo=photo, caption="Maxsulotlardan birini tanlang", reply_markup=builders.get_products_btn(products, f"categories"))
+            await call.message.answer_photo(photo=photo, caption=f"{REGISTER_TEXTS['choose_product'].get(user_language)}", reply_markup=builders.get_products_btn(products, f"categories", lang=user_language))
         return True
     
-    await call.answer("Maxsulotlar topilmadi")
+    await call.answer(f"{REGISTER_TEXTS['404_product'].get(user_language)}")
     categories = await sync_to_async(list)(Category.objects.get_parent_categories(lvl=0))
-    await call.message.answer("Kategoriyalardan birini tanlang", reply_markup=builders.get_categories_btn(categories, f"category_0"))
+    await call.message.answer(f"{REGISTER_TEXTS['choose_ctg'].get(user_language)}", reply_markup=builders.get_categories_btn(categories, f"category_0", lang=user_language))
 
 
 @router.callback_query(F.data.startswith("product_"))
-async def get_product(call: types.CallbackQuery, state=FSMContext):
+async def get_product(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     product_id = int(call.data.split("_")[1])
     await call.message.delete()
     product = await sync_to_async(Product.objects.get)(id=product_id)
-    caption = f"Nomi: <b>{product.name}</b> \n"
-    caption += f"Tavsif: {product.description}\n"
-    caption += f"Narxi: {product.price} so'm"
+    caption = f"{REGISTER_TEXTS['name'].get(user_language)}: <b>{product.name}</b> \n"
+    caption += f"{REGISTER_TEXTS['description'].get(user_language)}: {product.description}\n"
+    caption += f"{REGISTER_TEXTS['price'].get(user_language)}: {product.price} UZS"
     if product.image:
         try:
             photo = FSInputFile(product.image.path)  
-            await call.message.answer_photo(photo=photo, caption=caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
+            await call.message.answer_photo(photo=photo, caption=caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
         except Exception as error:
-            await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
+            await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
     else:
-        await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id))
+        await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
         
 
 @router.callback_query(fabrics.ProductValue.filter(F.action.in_(['addcart'])))
-async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValue):
+async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValue, user_language: str = 'uz'):
     await call.answer()
     quantity = int(callback_data.count)
     product_id = int(callback_data.product_id)
@@ -105,6 +108,7 @@ async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValu
     await orderItem.asave()
     
     await call.message.answer(f"'{product.name}' dan {quantity} tasi  savatga qo'shildi")
+    await call.message.answer(f"{REGISTER_TEXTS['price'].get(user_language)}".format(product=product.name, quantity=quantity), reply_markup=inline.cart_btn(empty=False, lang=user_language))
     await categories(call, state=FSMContext)
 
 
@@ -116,13 +120,13 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext, user_language: st
     userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
     
     if not userOrder:
-        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await call.message.edit_text(f"{REGISTER_TEXTS['empty'].get(user_language)}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
     
     if not orderItems:
-        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await call.message.edit_text(f"{REGISTER_TEXTS['empty'].get(user_language)}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
     
     if userOrder.is_all_order_info_filled:
@@ -136,15 +140,15 @@ async def my_cart(call: types.CallbackQuery, state=FSMContext, user_language: st
     # text = "Sizning savatingizda quidagilar mavjud: \n\n"
     # for index, item in enumerate(orderItems, 1):
     #     text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
-    #     text += f"""  >  {int(item.get("product__price"))} x {item.get("quantity")} ta => {item.get("total_price")} so'm\n\n"""
+    #     text += f"""  >  {int(item.get("product__price"))} x {item.get("quantity")} ta => {item.get("total_price")} UZS\n\n"""
     #     total_price += item.get("total_price")
         
-    # text += f"<b>Jami: {total_price} so'm </b>"
+    # text += f"<b>Jami: {total_price} UZS </b>"
     not_fill_field = True
     if userOrder.is_all_order_info_filled:
         not_fill_field = False
     
-    await call.message.edit_text(text, reply_markup=inline.cart_btn(empty=False, order_id=userOrder.id, not_fill_field=not_fill_field), parse_mode=ParseMode.HTML)
+    await call.message.edit_text(text, reply_markup=inline.cart_btn(empty=False, lang=user_language, order_id=userOrder.id, not_fill_field=not_fill_field), parse_mode=ParseMode.HTML)
         
 
 
@@ -156,7 +160,7 @@ async def change_products(call: types.CallbackQuery, state=FSMContext, user_lang
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=cart_id))
     
     if not orderItems:
-        await call.message.edit_text("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await call.message.edit_text(f"{REGISTER_TEXTS['empty'].get(user_language)}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
     
     # orderItems = list(enumerate(orderItems, 1))
@@ -167,22 +171,22 @@ async def change_products(call: types.CallbackQuery, state=FSMContext, user_lang
         
     text = await get_cart_items_text(list(enumerate(orderItems, 1)), user_language=user_language)
     
-    await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), cart_id), parse_mode=ParseMode.HTML)
+    await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), cart_id, lang=user_language), parse_mode=ParseMode.HTML)
     
     
 @router.callback_query(F.data == "clearOrder")
-async def clear_order(call: types.CallbackQuery, state=FSMContext):
+async def clear_order(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     user_tg_id = call.from_user.id
     user = await sync_to_async(User.objects.get)(telegram_id=user_tg_id)
     userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
     
     await sync_to_async(userOrder.delete)()
     
-    await call.message.edit_text("Savat bo'shatildi", reply_markup=inline.cart_btn(empty=True))
+    await call.message.edit_text(f"{REGISTER_TEXTS['empty'].get(user_language)}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
 
 
 @router.callback_query(F.data.startswith("createToOrder_"))
-async def create_to_order(call: types.CallbackQuery, state=FSMContext):
+async def create_to_order(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     await state.clear()
     orderId = int(call.data.split("_")[1])
     user_tg_id = call.from_user.id
@@ -192,35 +196,35 @@ async def create_to_order(call: types.CallbackQuery, state=FSMContext):
         # TODO: Order is already created, go to payment
         return True  
     
-    await call.message.edit_text("Buyurtmani qanday holatda olishni istaysiz?", reply_markup=inline.delivery_type_btn)
+    await call.message.edit_text(f"{REGISTER_TEXTS['choose_delivery_type'].get(user_language)}", reply_markup=inline.delivery_type_btn(user_language))
     await state.update_data(orderId= orderId)
     await state.set_state(CreateOrderState.delivery_type)
     
 
 @router.callback_query(StateFilter(CreateOrderState.delivery_type, F.data in ['pickup', 'delivery']))
-async def get_delivery_type(call: types.CallbackQuery, state=FSMContext):
+async def get_delivery_type(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     delivery_type = call.data
     await state.update_data(delivery_type= delivery_type)
     await call.message.delete()
     
     if delivery_type == 'pickup':
         branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
-        await call.message.answer("O'zingizga qulay filialni tanlang. ", reply_markup=builders.get_brancches_btn(branches))
+        await call.message.answer(f"{REGISTER_TEXTS['choose_delivery_type'].get(user_language)}", reply_markup=builders.get_brancches_btn(branches, lang=user_language))
         await state.set_state(CreateOrderState.branch)
         return True
     
-    await call.message.answer("<b>Eltib berish</b> uchun <b>geo-joylashuvni</b> jo'nating:", reply_markup=reply.get_address_btn)
+    await call.message.answer(f"{REGISTER_TEXTS['send_location'].get(user_language)}", reply_markup=reply.get_address_btn(user_language))
     await state.set_state(CreateOrderState.location)
     
     
 @router.message(StateFilter(CreateOrderState.location), F.location)
-async def get_location_func(message: types.Message, state: FSMContext):
+async def get_location_func(message: types.Message, state: FSMContext, user_language: str = 'uz'):
     location = message.location
     location_url = f"https://maps.google.de/maps?q={location.latitude},{location.longitude}&z=17&t=m"
     try:
         address = await get_address(location.latitude, location.longitude)
     except Exception as error:
-        await message.answer("Manzilni topishda xatolik yuz berdi. Iltimos qaytadan urinib ko'ring", reply_markup=reply.get_address_btn)
+        await message.answer(f"{REGISTER_TEXTS['location_error'].get(user_language)}", reply_markup=reply.get_address_btn(user_language))
         return True
     
     await state.update_data(
@@ -228,42 +232,42 @@ async def get_location_func(message: types.Message, state: FSMContext):
         address= address
     )
     
-    await message.answer(f"Buyurtma qilmoqchi bo'lgan manzilingiz\n<b>{address}</b>\n\n Ushbu manzilni tasdiqlaysizmi?", reply_markup=reply.address_confirmation)
+    await message.answer(f"{REGISTER_TEXTS['location_error'].get(user_language)}".format(address=address), reply_markup=reply.address_confirmation(user_language))
     await state.set_state(CreateOrderState.address)
 
 
 @router.message(StateFilter(CreateOrderState.location), ~F.location)
-async def get_not_location_func(message: types.Message, state: FSMContext):
-    await message.answer("<b>Eltib berish</b> uchun <b>geo-joylashuvni</b> jo'nating:", reply_markup=reply.get_address_btn)
+async def get_not_location_func(message: types.Message, state: FSMContext, user_language: str = 'uz'):
+    await message.answer(f"{REGISTER_TEXTS['send_location'].get(user_language)}", reply_markup=reply.get_address_btn(user_language))
     await state.set_state(CreateOrderState.location)
     
 
 @router.message(StateFilter(CreateOrderState.address), F.text )
-async def address_confirm_func(message: types.Message, state: FSMContext):
+async def address_confirm_func(message: types.Message, state: FSMContext, user_language: str = 'uz'):
     
-    if message.text == "✅ To'g'ri":
-        await message.answer("Manzil bo'yicha qo'shimcha ma'lumotingizni kiriting.\nMisol uchun: Podyezd №, qavat №, eshik kodi №, kv №..", reply_markup=reply.back_btn)
+    if message.text in (BUTTON_TEXTS["correct"]['ru'], BUTTON_TEXTS["correct"]['uz']):
+        await message.answer(f"{REGISTER_TEXTS['addedtional_input'].get(user_language)}", reply_markup=reply.back_btn(user_language))
         await state.set_state(CreateOrderState.addention)
         return True
     
-    if message.text == "❌ Noto'g'ri":
+    if message.text in (BUTTON_TEXTS["incorrect"]['ru'], BUTTON_TEXTS["incorrect"]['uz']):
         await get_not_location_func(message, state)
         return True  
     
-    await message.answer(f"Yuqoridagi manzilning to'g'riligini tasdiqlang?", reply_markup=reply.address_confirmation)
+    await message.answer(f"{REGISTER_TEXTS['address_confirmation'].get(user_language)}", reply_markup=reply.address_confirmation(user_language))
     await state.set_state(CreateOrderState.address)
 
 
 @router.message(StateFilter(CreateOrderState.addention), F.text)
-async def address_addention_func(message: types.Message, state: FSMContext):
+async def address_addention_func(message: types.Message, state: FSMContext, user_language: str = 'uz'):
     addention = message.text
     await state.update_data(addention= addention)
     await state.set_state(CreateOrderState.phone)
-    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    await message.answer(f"{REGISTER_TEXTS['send_phone'].get(user_language)}", reply_markup=reply.phone_btn(user_language))
     
     
 @router.callback_query(StateFilter(CreateOrderState.branch), F.data.startswith('branch_'))
-async def get_order_branch(call: types.CallbackQuery, state=FSMContext):
+async def get_order_branch(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     await call.message.delete()
     branch_id = call.data.split('_')[-1]
     if str(branch_id) == '0':
@@ -273,47 +277,47 @@ async def get_order_branch(call: types.CallbackQuery, state=FSMContext):
     
     await state.update_data(branch=branch_id)
     await state.set_state(CreateOrderState.phone)
-    await call.message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    await call.message.answer(f"{REGISTER_TEXTS['send_phone'].get(user_language)}", reply_markup=reply.phone_btn(user_language))
     
 
 @router.message(StateFilter(CreateOrderState.phone), F.contact)
-async def set_phone(message: types.Message, state: FSMContext):
+async def set_phone(message: types.Message, state: FSMContext, user_language: str = 'uz'):
     phone = message.contact.phone_number
     await state.update_data(phone=phone)
     
     await state.set_state(CreateOrderState.full_name)
-    await message.answer("Ismingizni kiriting", reply_markup=reply.rmk)
+    await message.answer(f"{REGISTER_TEXTS['enter_name'].get(user_language)}", reply_markup=reply.rmk)
     
     
 @router.message(StateFilter(CreateOrderState.phone), ~F.contact)
-async def not_phone(message: types.Message, state=FSMContext):
+async def not_phone(message: types.Message, state=FSMContext, user_language: str = 'uz'):
     phone_text = message.text
     # if len
-    await message.answer("Telefon raqamingizni yuboring", reply_markup=reply.phone_btn)
+    await message.answer(f"{REGISTER_TEXTS['send_phone'].get(user_language)}", reply_markup=reply.phone_btn(user_language))
     
 
 @router.message(StateFilter(CreateOrderState.full_name), F.text)
-async def get_full_name(message: types.Message, state=FSMContext):
+async def get_full_name(message: types.Message, state=FSMContext, user_language: str = 'uz'):
     full_name = message.text
     await state.update_data(full_name=full_name)
     data = await state.get_data()
     
     # print(data)
-    text = f"Buyurtma ma'lumotlari to'g'riligini tasdiqlang\n\n"
+    text = f"{REGISTER_TEXTS['confirm_order'].get(user_language)}\n\n"
     if data.get('delivery_type') == 'pickup':
         branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
-        text += f"Buyurtma turi: <b>Olib ketish</b>\n"
-        text += f"Filial: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
-        text += f"Olib ketuvchi: <b>{full_name}</b>\n"
-        text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
+        text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>{BOT_WORDS['pickup'].get(user_language)}</b>\n"
+        text += f"{BOT_WORDS['branch'].get(user_language)}: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
+        text += f"{BOT_WORDS['order_user'].get(user_language)}: <b>{full_name}</b>\n"
+        text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{data.get('phone')}</b>\n"
     else:
-        text += f"Buyurtma turi: <b>Yetkazib berish</b>\n"
-        text += f"Qabul qiluvchi: <b>{full_name}</b>\n"
-        text += f"Telefon raqam: <b>{data.get('phone')}</b>\n"
-        text += f"Manzil: <b>{data.get('address')}</b>\n"
-        text += f"Qo'shimcha: <b>{data.get('addention')}</b>\n"
+        text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>Yetkazib berish</b>\n"
+        text += f"{BOT_WORDS['order_user_input'].get(user_language)}: <b>{full_name}</b>\n"
+        text += f"{BOT_WORDS['order_phone'].get(user_language)}: <b>{data.get('phone')}</b>\n"
+        text += f"{BOT_WORDS['order_address'].get(user_language)}: <b>{data.get('address')}</b>\n"
+        text += f"{BOT_WORDS['order_addention'].get(user_language)}: <b>{data.get('addention')}</b>\n"
     
-    await message.answer(text, reply_markup=reply.address_confirmation)
+    await message.answer(text, reply_markup=reply.address_confirmation(user_language))
     await state.set_state(CreateOrderState.confirm)
     
     
@@ -322,7 +326,7 @@ async def confirm_data_func(message: types.Message, state=FSMContext, user_langu
     data = await state.get_data()
     await state.clear()
     
-    if message.text == "✅ To'g'ri":
+    if message.text in (BUTTON_TEXTS["correct"]['ru'], BUTTON_TEXTS["correct"]['uz']):
         # user = await sync_to_async(User.objects.get)(telegram_id=message.from_user.id)
         print(data)
         orderId = data.get("orderId")
@@ -346,10 +350,10 @@ async def confirm_data_func(message: types.Message, state=FSMContext, user_langu
         order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order, user_language)
         await message.answer(order_info, reply_markup=reply.rmk)
         
-        await message.answer("O'zingizga qulay bo'lgan to'lov turini tanlang", reply_markup=inline.payment_type(order.id))
+        await message.answer(f"{BOT_WORDS['choose_payment_type'].get(user_language)}", reply_markup=inline.payment_type(order.id, user_language))
         
     else:
         
-        await message.answer("Buyurtma ma'lumotlari bekor qilindi.", reply_markup=reply.rmk)    
+        await message.answer(f"{BOT_WORDS['payment_will_be_cancel'].get(user_language)}", reply_markup=reply.rmk)    
         await my_cart_message(message, state)
         return True

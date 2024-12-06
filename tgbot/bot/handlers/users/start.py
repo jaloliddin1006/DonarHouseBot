@@ -74,7 +74,7 @@ async def set_language(call: types.CallbackQuery, state: FSMContext, user_langua
     await state.update_data(language_code=language)
     await call.message.delete()
     await state.set_state(RegistrationState.location)
-    await call.message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn)
+    await call.message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn(user_language))
     await call.answer()
 
 
@@ -88,12 +88,12 @@ async def set_location(message: types.Message, state: FSMContext, user_language:
         "address": address
     })
     await state.set_state(RegistrationState.phone)
-    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn)
+    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn(user_language))
     
     
 @router.message(StateFilter(RegistrationState.location), ~F.location)
 async def not_location(message: types.Message, user_language: str):
-    await message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn)
+    await message.answer(f"{BOT_WORDS['get_location'].get(user_language)}", reply_markup=reply.location_btn(user_language))
 
 
 @router.message(StateFilter(RegistrationState.phone), F.contact)
@@ -115,5 +115,5 @@ async def set_phone(message: types.Message, state: FSMContext, user_language: st
     
 @router.message(StateFilter(RegistrationState.phone), ~F.contact)
 async def not_phone(message: types.Message, user_language: str):
-    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn)
+    await message.answer(f"{BOT_WORDS['get_phone'].get(user_language)}", reply_markup=reply.phone_btn(user_language))
     

@@ -1,0 +1,40 @@
+[
+    {
+        "model": "tgbot.about",
+        "pk": 1,
+        "fields": {
+            "description": "DonarHouse fastfud markazi mazali taomlar, sifatli xizmat va do'stona muhitni taqdim etadi. Biz har doim mijozlarimizga eng yaxshi taomlar va tezkor xizmat ko'rsatishni maqsad qilamiz.",
+            "created_at": "2024-01-01T12:00:00Z",
+            "updated_at": "2024-01-01T12:00:00Z",
+            "is_active": true
+        }
+    },
+    {
+        "model": "tgbot.branch",
+        "pk": 1,
+        "fields": {
+            "name": "DonarHouse Toshkent",
+            "phone": "+998901234567",
+            "address": "Toshkent shahri, Amir Temur ko'chasi, 10",
+            "location": "https://yandex.uz/maps/-/CCUAY5Tq0B",
+            "working_hours": "09:00 - 22:00",
+            "created_at": "2024-01-01T12:00:00Z",
+            "updated_at": "2024-01-01T12:00:00Z",
+            "is_active": true
+        }
+    },
+    {
+        "model": "tgbot.branch",
+        "pk": 2,
+        "fields": {
+            "name": "DonarHouse Samarqand",
+            "phone": "+998901234568",
+            "address": "Samarqand shahri, Registon ko'chasi, 5",
+            "location": "https://yandex.uz/maps/-/CCUAY5TkQF",
+            "working_hours": "10:00 - 23:00",
+            "created_at": "2024-01-01T12:00:00Z",
+            "updated_at": "2024-01-01T12:00:00Z",
+            "is_active": true
+        }
+    }
+]

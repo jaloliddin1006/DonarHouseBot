@@ -21,44 +21,44 @@ router = Router()
 
 # TODO: commandlar to'g'irlanib qo'shib chiqilishi kerak
 @router.message(F.text == "/mycart")
-async def my_cart_message(message: types.Message, state: FSMContext):
+async def my_cart_message(message: types.Message, state: FSMContext, user_language: str='uz'):
 
     user = await sync_to_async(User.objects.get)(telegram_id=message.from_user.id)
     userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
     
     if not userOrder:
-        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
     
     if not orderItems:
-        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True))
+        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
         
     total_price = 0
     text = "Sizning savatingizda quidagilar mavjud: \n\n"
     for index, item in enumerate(orderItems, 1):
         text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
-        text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} so'm => {item.get("total_price")} so'm\n\n"""
+        text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} UZS => {item.get("total_price")} UZS\n\n"""
         total_price += item.get("total_price")
         
-    text += f"<b>Jami: {total_price} so'm </b>"
+    text += f"<b>Jami: {total_price} UZS </b>"
     
-    await message.answer(text, reply_markup=inline.cart_btn(empty=False), parse_mode=ParseMode.HTML)
+    await message.answer(text, reply_markup=inline.cart_btn(empty=False, lang=user_language), parse_mode=ParseMode.HTML)
         
 
 
 
 @router.callback_query(F.data == "branches")
-async def branches(call: types.CallbackQuery, state=FSMContext):
+async def branches(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
     await call.message.delete()
     branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
-    await call.message.answer("Filiallardan birini tanlang", reply_markup=builders.get_brancches_btn(branches))
+    await call.message.answer("Filiallardan birini tanlang", reply_markup=builders.get_brancches_btn(branches, lang=user_language))
     
     
 @router.callback_query(F.data.startswith("branch_"))
-async def get_branch(call: types.CallbackQuery, state=FSMContext):
+async def get_branch(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
     await call.answer()
     branch_id = int(call.data.split("_")[1])
     if branch_id == 0:
@@ -70,13 +70,13 @@ async def get_branch(call: types.CallbackQuery, state=FSMContext):
     branch = await Branch.objects.aget(id=branch_id)
     branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
     await call.message.edit_text(f"{branch.name}\n{branch.phone}\n{branch.address}\n{branch.working_hours}\n{branch.location}", 
-                              reply_markup=builders.get_brancches_btn(branches))
+                              reply_markup=builders.get_brancches_btn(branches, lang=user_language))
                                   
 
 @router.callback_query(F.data == "aboutus")
-async def about_us(call: types.CallbackQuery, state=FSMContext):
+async def about_us(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
     about = await About.objects.alast()
-    await call.message.edit_text(about.description, reply_markup=inline.back_btn, parse_mode=ParseMode.MARKDOWN)
+    await call.message.edit_text(about.description, reply_markup=inline.back_btn(user_language), parse_mode=ParseMode.MARKDOWN)
     
 
 @router.callback_query(F.data.startswith("lang_"))
