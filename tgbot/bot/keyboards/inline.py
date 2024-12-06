@@ -10,31 +10,32 @@ ssilki_kb = InlineKeyboardMarkup(
 
     ]
 )
+def main_btn(lang='uz'):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['menu'][lang]}", callback_data="categories"),
+            ],
+            [
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['about_us'][lang]}", callback_data="aboutus"),
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['my_cart'][lang]}", callback_data="mycart"),
+            ],
+            [
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['branches'][lang]}", callback_data="branches"),
+            ],
+            [
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['comment'][lang]}", callback_data="comment"),
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['setting'][lang]}", callback_data="settings"),
+            ],
+        ]
+    )
 
-main_btn = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text="🛒 Menu", callback_data="categories"),
-        ],
-        [
-            InlineKeyboardButton(text="ℹ️ Biz haqimizda", callback_data="aboutus"),
-            InlineKeyboardButton(text="🛍 Savatcha", callback_data="mycart"),
-        ],
-        [
-            InlineKeyboardButton(text="📍 Filiallar", callback_data="branches"),
-        ],
-        [
-            InlineKeyboardButton(text="💬 Fikr bildirish", callback_data="comment"),
-            InlineKeyboardButton(text="⚙️ Sozlamalarim", callback_data="settings"),
-        ],
-    ]
-)
 
 language_btn = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="uz"),
-            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="ru"),
+            InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="lang_uz"),
+            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang_ru"),
             # InlineKeyboardButton(text="🇺🇸 English", callback_data="en"),
         ],
     ]

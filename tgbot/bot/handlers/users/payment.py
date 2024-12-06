@@ -199,7 +199,7 @@ async def process_successful_payment(message: types.Message, user_language: str=
                            parse_mode=ParseMode.HTML                                                         
                             )
     await message.answer("To'lovingiz qabul qilindi.  \n  Operatorlarimizning siz bilan bog'lanishini kuting. \n 📲 Call-Markaz: +998932977419")
-    await message.answer("Asosiy menyu", reply_markup=inline.main_btn)
+    await message.answer("Asosiy menyu", reply_markup=inline.main_btn(user_language))
     
     
 # @router.pre_checkout_query()

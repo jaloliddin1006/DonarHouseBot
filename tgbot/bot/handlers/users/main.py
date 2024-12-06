@@ -15,6 +15,7 @@ from tgbot.bot.states.main import CreateOrderState
 from PIL import Image
 from io import BytesIO
 import os
+from tgbot.bot.utils.all_texts import BOT_WORDS, REGISTER_TEXTS
 
 
 router = Router()
@@ -27,23 +28,23 @@ async def my_cart_message(message: types.Message, state: FSMContext, user_langua
     userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
     
     if not userOrder:
-        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True, lang=user_language))
+        await message.answer(f"{REGISTER_TEXTS['empty'][user_language]}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
     
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=userOrder.id))
     
     if not orderItems:
-        await message.answer("Savat bo'sh", reply_markup=inline.cart_btn(empty=True, lang=user_language))
+        await message.answer(f"{REGISTER_TEXTS['empty'][user_language]}", reply_markup=inline.cart_btn(empty=True, lang=user_language))
         return True
         
     total_price = 0
-    text = "Sizning savatingizda quidagilar mavjud: \n\n"
+    text = f"{BOT_WORDS['your_bucket'][user_language]}: \n\n"
     for index, item in enumerate(orderItems, 1):
-        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b> dan\n """
-        text += f"""  >  {item.get("quantity")} ta  x  {int(item.get("product__price"))} UZS => {item.get("total_price")} UZS\n\n"""
+        text += f"""{STICERS[index]} <b> {item.get("product__name")}</b>\n """
+        text += f"""  >  {item.get("quantity")}  x  {int(item.get("product__price"))} UZS => {item.get("total_price")} UZS\n\n"""
         total_price += item.get("total_price")
         
-    text += f"<b>Jami: {total_price} UZS </b>"
+    text += f"<b>{BOT_WORDS['all'][user_language]}: {total_price} UZS </b>"
     
     await message.answer(text, reply_markup=inline.cart_btn(empty=False, lang=user_language), parse_mode=ParseMode.HTML)
         
@@ -54,7 +55,7 @@ async def my_cart_message(message: types.Message, state: FSMContext, user_langua
 async def branches(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
     await call.message.delete()
     branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
-    await call.message.answer("Filiallardan birini tanlang", reply_markup=builders.get_brancches_btn(branches, lang=user_language))
+    await call.message.answer(f"{REGISTER_TEXTS['get_branches'][user_language]}", reply_markup=builders.get_brancches_btn(branches, lang=user_language))
     
     
 @router.callback_query(F.data.startswith("branch_"))
@@ -63,7 +64,7 @@ async def get_branch(call: types.CallbackQuery, state=FSMContext, user_language:
     branch_id = int(call.data.split("_")[1])
     if branch_id == 0:
         await call.message.delete()
-        await call.message.answer("Biz bilan birga buyurtma qilishga tayyormisiz? ", reply_markup=inline.main_btn)
+        await call.message.answer(f"{BOT_WORDS['main_sentence'][user_language]} ", reply_markup=inline.main_btn(user_language))
         await state.clear()
         return True
     
@@ -79,13 +80,18 @@ async def about_us(call: types.CallbackQuery, state=FSMContext, user_language: s
     await call.message.edit_text(about.description, reply_markup=inline.back_btn(user_language), parse_mode=ParseMode.MARKDOWN)
     
 
+@router.callback_query(F.data == "settings")
+async def settings(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
+    await call.message.edit_text(f"{BOT_WORDS['choose_lang'][user_language]}", reply_markup=inline.language_btn)
+
+
 @router.callback_query(F.data.startswith("lang_"))
-async def change_language(call: types.CallbackQuery):
+async def change_language(call: types.CallbackQuery, user_language: str='uz'):
     lang_code = call.data.split("_")[1]
     user = await User.objects.aget(telegram_id=call.from_user.id)
     user.language_code = lang_code
     await user.asave()
     await call.message.edit_text(
-        f"Til muvaffaqiyatli o'zgartirildi: {lang_code.upper()}",
+        f"{BOT_WORDS['success_change'][user_language]}: {lang_code.upper()}",
         reply_markup=None
     )

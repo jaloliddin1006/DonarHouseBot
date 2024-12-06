@@ -64,7 +64,7 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
         await state.set_state(RegistrationState.language)
         await message.answer(f"{BOT_WORDS['choose_lang'].get(user_language)}", reply_markup=inline.language_btn)
     else:
-        await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
+        await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn(user_language))
         
 
 
@@ -110,7 +110,7 @@ async def set_phone(message: types.Message, state: FSMContext, user_language: st
     )
     await state.clear()
     await message.answer(f"{BOT_WORDS['start_for_use'].get(user_language)}", reply_markup=reply.rmk)
-    await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
+    await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn(user_language))
     
     
 @router.message(StateFilter(RegistrationState.phone), ~F.contact)

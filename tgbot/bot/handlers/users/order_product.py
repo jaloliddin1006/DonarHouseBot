@@ -46,7 +46,7 @@ async def get_subcategories(call: types.CallbackQuery, state=FSMContext, user_la
     category_id = int(call.data.split("_")[1])
     await call.message.delete()
     if category_id == 0:
-        await call.message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn)
+        await call.message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn(lang=user_language), parse_mode=ParseMode.HTML)
         return True
     
     sub_categories = await sync_to_async(list)(Category.objects.sub_ctg(id=category_id))

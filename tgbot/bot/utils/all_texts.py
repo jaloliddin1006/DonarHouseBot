@@ -104,6 +104,10 @@ BOT_WORDS = {
         "uz": "Buyurtma ma'lumotlari bekor qilindi.",
         "ru": "Информация о заказе отменена."
     },
+    "success_change": {
+        "uz": "Til muvaffaqiyatli o'zgartirildi",
+        "ru": "Язык успешно изменен"
+    }
 }
 
 
@@ -184,6 +188,10 @@ REGISTER_TEXTS = {
         "uz": "Buyurtmani tasdiqlash",
         "ru": "Подтвердить заказ"
     },
+    "get_branches": {
+        "uz": "Filiallardan birini tanlang",
+        "ru": "Выберите один из филиалов"
+    },
 }
 
 
@@ -245,8 +253,28 @@ BUTTON_TEXTS = {
         "ru": "💳 Оплатить",
     },
     "my_cart": {
-        "uz": "🛍 Savat",
+        "uz": "🛍 Savatcha",
         "ru": "🛍 Корзина",
+    },
+    "menu": {
+        "uz": "📋 Menu",
+        "ru": "📋 Меню",
+    },
+    "about_us": {
+        "uz": "📄 Biz haqimizda",
+        "ru": "📄 О нас",
+    },
+    "branches": {
+        "uz": "📍 Filiallar",
+        "ru": "📍 Филиалы",
+    },
+    "comment": {
+        "uz": "📝 Izoh qoldirish",
+        "ru": "📝 Оставить отзыв",
+    },
+    "setting": {
+        "uz": "⚙️ Sozlamalar",
+        "ru": "⚙️ Настройки",
     },
         
 }
