@@ -38,7 +38,7 @@ def get_categories_btn(categories: list = [], back: str = "category_0", user_car
     builder = InlineKeyboardBuilder()
     len_ = len(categories)
     [builder.button(text=category.name, callback_data=f"category_{category.id}") for category in categories]
-    builder.button(text=f"{BUTTON_TEXTS['back'][lang]}", callback_data=back)
+    builder.button(text=f"{BUTTON_TEXTS['back'].get(lang)}", callback_data=back)
     builder.adjust(*[2]*(len_//2), 1)  
     if user_cart:
         builder.button(text=f"{BUTTON_TEXTS['my_cart'][lang]}", callback_data='mycart')

@@ -64,6 +64,7 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
         await state.set_state(RegistrationState.language)
         await message.answer(f"{BOT_WORDS['choose_lang'].get(user_language)}", reply_markup=inline.language_btn)
     else:
+        print("##########################", user_language)
         await message.answer(f"{BOT_WORDS['main_sentence'].get(user_language)} \n\n<a href='{BOT_WORDS['menu_link'].get(user_language)}'>Donar House Menu </a>", reply_markup=inline.main_btn(user_language))
         
 

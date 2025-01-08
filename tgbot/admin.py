@@ -36,10 +36,11 @@ class BotAdminsAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(DraggableMPTTAdmin):
     mptt_indent_field = "name"
-    list_display = ('tree_actions', 'id', 'indented_title',
+    list_display = ('tree_actions', 'id', 'indented_title', "uuid", 'order'
                     # 'related_products_count', 'related_products_cumulative_count'
                     )
     list_display_links = ('indented_title', 'id')
+    readonly_fields = ('uuid',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

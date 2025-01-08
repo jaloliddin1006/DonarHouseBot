@@ -14,7 +14,7 @@ def main_btn(lang='uz'):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"{BUTTON_TEXTS['menu'][lang]}", callback_data="categories"),
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['menu'].get(lang)}", callback_data="categories"),
             ],
             [
                 InlineKeyboardButton(text=f"{BUTTON_TEXTS['about_us'][lang]}", callback_data="aboutus"),

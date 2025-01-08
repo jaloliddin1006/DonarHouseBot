@@ -9,8 +9,8 @@ BOT_WORDS = {
         "ru": "Готовы сделать заказ у нас?"
     },
     "menu_link": {
-        "uz": "https://telegra.ph/Taomnoma-09-30",
-        "ru": "https://telegra.ph/Taomnoma-09-30"
+        "uz": "https://telegra.ph/Delim-food-01-07",
+        "ru": "https://telegra.ph/Delim-food-01-07"
     },
     "get_location": {
         "uz": "Lokatsiyangizni yuboring",
