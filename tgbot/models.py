@@ -68,6 +68,7 @@ class Branch(BaseModel):
     address = models.TextField(verbose_name="Manzil")
     location = models.CharField(max_length=255, verbose_name="Lokatsiya (Yandex Maps Link)")
     working_hours = models.CharField(max_length=255, verbose_name="Ish vaqtlari")
+    terminal_id = models.UUIDField()
 
     def __str__(self):
         return self.name
@@ -119,21 +120,24 @@ class Order(BaseModel):
         ("canceled", "Canceled"),
     )
     DELIVERY_TYPES = (
-        ("pickup", "Borib olish"),
-        ("delivery", "Yetkazish"),
+        ("DeliveryPickUp", "Borib olish"),
+        ("DeliveryByCourier", "Yetkazish"),
     )
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
-    delivery = models.CharField(max_length=50, choices=DELIVERY_TYPES, default="pickup")
+    delivery = models.CharField(max_length=50, choices=DELIVERY_TYPES)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="orders")
     address = models.TextField(verbose_name="Manzil", null=True, blank=True)
     location = models.CharField(max_length=255, verbose_name="Lokatsiya (Yandex Maps Link)", null=True, blank=True)
+    latitude = models.CharField(max_length=50, null=True, blank=True)
+    longitude = models.CharField(max_length=50, null=True, blank=True)
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50, null=True, blank=True)
     status = models.CharField(max_length=50, choices=ORDER_STATUSES, default="active")
     addention = models.TextField(null=True, blank=True)
     is_all_order_info_filled = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
+    iiko_order_id = models.UUIDField(null=True, blank=True)
   
     objects = OrderManager()
 
@@ -206,7 +210,6 @@ class PromoCodes(BaseModel):
 
 class AccessToken(BaseModel):
     token = models.CharField(max_length=255, unique=True)
-    is_active = models.BooleanField(default=True)
     
     def __str__(self):
         return self.token

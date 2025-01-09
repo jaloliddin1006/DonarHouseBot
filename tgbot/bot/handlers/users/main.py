@@ -7,6 +7,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.handlers.users.iiko_integration import create_order, get_delivery_info_by_id
 from tgbot.utils import get_address
 from tgbot.bot.keyboards import reply, inline, builders, fabrics
 from tgbot.models import User, Category, Product, Order, OrderItem, Branch, About
@@ -81,13 +82,13 @@ async def about_us(call: types.CallbackQuery, state=FSMContext, user_language: s
     
 
 @router.callback_query(F.data == "settings")
-async def settings(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
+async def settings_func(call: types.CallbackQuery, state=FSMContext, user_language: str='uz'):
     await call.message.edit_text(f"{BOT_WORDS['choose_lang'][user_language]}", reply_markup=inline.language_btn)
 
 
 @router.callback_query(F.data.startswith("lang_"))
 async def change_language(call: types.CallbackQuery, user_language: str='uz'):
-    lang_code = call.data.split("_")[1]
+    lang_code = call.data.split("_")[-1]
     user = await User.objects.aget(telegram_id=call.from_user.id)
     user.language_code = lang_code
     await user.asave()
@@ -95,3 +96,34 @@ async def change_language(call: types.CallbackQuery, user_language: str='uz'):
         f"{BOT_WORDS['success_change'][user_language]}: {lang_code.upper()}",
         reply_markup=None
     )
+
+@router.message(F.text == "/order_info")
+async def my_cart_message(message: types.Message, state: FSMContext, user_language: str='uz'):
+    # GROUP_ID = settings.TELEGRAM_GROUP_ID
+    # order = await Order.objects.aget(id=3)
+
+    # response = await create_order(order)
+    # if response.get("code") == 200:
+    #     await bot.send_message(chat_id=GROUP_ID,
+    #                        text=f"Buyurtma IIKO ga muvaffaqiyatli qo'shildi. \nIIKO dagi buyurtma ID {response.get('data').get('orderInfo').get('id')}",     
+    #                        parse_mode=ParseMode.MARKDOWN                                                         
+    #                         )
+    # else:
+    #     await bot.send_message(chat_id=GROUP_ID,
+    #                        text=f"Buyurtma IIKO ga yuborishda muvaffaqiyatsizlikka uchradi. \nIIKO dagi buyurtma ID {response.get('data').get('orderInfo').get('id')}",     
+    #                        parse_mode=ParseMode.MARKDOWN                                                         
+    #                         )
+        
+    
+    
+    user = await sync_to_async(User.objects.get)(telegram_id=message.from_user.id)
+    userOrder = await sync_to_async(lambda: Order.objects.filter(user=user, is_active=True, status='active').last())()
+    
+    if not userOrder:
+        await message.answer(f"{REGISTER_TEXTS['empty'][user_language]}")
+        return True
+    
+    response = await get_delivery_info_by_id(userOrder.iiko_order_id)
+    print(response)
+    await message.answer(f"""Sizning buyurtmangiz: {response}""")
+    

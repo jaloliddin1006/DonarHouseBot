@@ -71,7 +71,7 @@ async def do_start(message: types.Message, state: FSMContext, command: CommandOb
 
 @router.callback_query(StateFilter(RegistrationState.language))
 async def set_language(call: types.CallbackQuery, state: FSMContext, user_language: str):
-    language = call.data
+    language = call.data.split('_')[-1]
     await state.update_data(language_code=language)
     await call.message.delete()
     await state.set_state(RegistrationState.location)

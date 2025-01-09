@@ -1,0 +1,223 @@
+{
+    "groups": [
+        {
+            "parentGroup": None,
+            "order": 8,
+            "id": "85b4adf8-f7d4-4cad-9910-6c32969c8bbc",
+            "code": "",
+            "name": "БАР",
+            "description": None
+        },
+        {
+            "parentGroup": "85b4adf8-f7d4-4cad-9910-6c32969c8bbc",
+            "order": 1,
+            "id": "fd3cb4d4-ef0e-410c-9b9e-9b257a32122c",
+            "code": "",
+            "name": "ГОРЯЧИЕ НАПИТКИ",
+            "description": None
+        },
+        {
+            "parentGroup": "85b4adf8-f7d4-4cad-9910-6c32969c8bbc",
+            "order": 0,
+            "id": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "code": "",
+            "name": "ХОЛОДНЫЕ НАПИТКИ",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 9,
+            "id": "cde2af50-adb1-4ec9-be3f-d54a2110f16c",
+            "code": "",
+            "name": "БУРГЕР",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 7,
+            "id": "6f445f0d-64d9-4859-b4a8-fac8f0a88539",
+            "code": "",
+            "name": "ГАРНИР И СОУСЫ",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 6,
+            "id": "7eb61c3a-4828-463e-9658-b2c3155162d7",
+            "code": "",
+            "name": "ДОНАР",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 5,
+            "id": "22c27aec-da2d-4dba-ab3b-e9dba6372bab",
+            "code": "",
+            "name": "КОМБО",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 4,
+            "id": "2b011a61-9a51-4426-8b2b-cef3429e2ab2",
+            "code": "",
+            "name": "Лаваш",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 3,
+            "id": "b8804c85-793f-4553-a861-60525bbac7a4",
+            "code": "",
+            "name": "МОРОЖЕНОЕ",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 0,
+            "id": "6dfadc1a-5768-44e4-a7e5-4525ce032ff9",
+            "code": "",
+            "name": "СЭНДВИЧ",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 0,
+            "id": "0cea56d2-f3c8-4811-a894-d692ba2d1b27",
+            "code": "",
+            "name": "Ход дог",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 1,
+            "id": "c68fd75f-da62-47cd-a16e-22374ac14116",
+            "code": "",
+            "name": "ДОСТАВКА",
+            "description": None
+        },
+        {
+            "parentGroup": "fd3cb4d4-ef0e-410c-9b9e-9b257a32122c",
+            "order": 0,
+            "id": "f35a0f7f-6af4-43bf-8cb5-682ac80fb2cf",
+            "code": "",
+            "name": "DOSTAVKA",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 9,
+            "id": "d0c71c74-b94a-4326-9a90-3818f80b25b4",
+            "code": "",
+            "name": "CHAY",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 8,
+            "id": "ccf25784-cd8c-453f-9647-98682618f29e",
+            "code": "",
+            "name": "COLA",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 7,
+            "id": "6c4ef9cd-fb31-483e-8d6e-248a363419f2",
+            "code": "",
+            "name": "ENERGETIK",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 6,
+            "id": "739a667d-e6b3-466c-af26-cb76e5fe51a7",
+            "code": "",
+            "name": "FANTA",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 5,
+            "id": "768a0537-b205-47a8-b65f-e48f8f557c91",
+            "code": "",
+            "name": "Moxito",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 4,
+            "id": "03dd974d-b446-4061-8632-5e18227f39a4",
+            "code": "",
+            "name": "PEPSI",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 3,
+            "id": "3f8039b2-b500-45dc-93fa-d9c9b3bceb57",
+            "code": "",
+            "name": "SOK",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 2,
+            "id": "a242cb9c-8e16-4689-8717-4ccba5ef86e8",
+            "code": "",
+            "name": "SPRITE",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 1,
+            "id": "0160dc8d-09df-40d3-a309-0b39cc63dfac",
+            "code": "",
+            "name": "SUV",
+            "description": None
+        },
+        {
+            "parentGroup": "61db3c84-8aea-44c5-9eb2-dff537bffe30",
+            "order": 0,
+            "id": "34f7857c-0522-41cd-a1cf-e325f5719542",
+            "code": "",
+            "name": "КАМПОТ",
+            "description": None
+        },
+        {
+            "parentGroup": None,
+            "order": 10,
+            "id": "aa29f9d5-f702-4715-a602-4bfc670f753d",
+            "code": "",
+            "name": "Чиккен",
+            "description": None
+        }
+    ],
+    "products": [
+        {
+            "weight": 0.555,
+            "type": "Dish",
+            "orderItemType": "Product",
+            "measureUnit": "порц",
+            "sizePrices": [
+                {
+                    "sizeId": None,
+                    "price": {
+                        "currentPrice": 49000.0,
+                        "isIncludedInMenu": True,
+                        "nextPrice": None,
+                        "nextIncludedInMenu": False,
+                        "nextDatePrice": None
+                    }
+                }
+            ],
+            "parentGroup": "22c27aec-da2d-4dba-ab3b-e9dba6372bab",
+            "order": 8,
+            "paymentSubject": "ТОВАР",
+            "id": "986217da-e112-4e74-802b-a12300da2a15",
+            "code": "00439",
+            "name": "Хагги комбо",
+            "description": ""
+        }
+    ]
+}

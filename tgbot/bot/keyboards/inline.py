@@ -83,8 +83,8 @@ def delivery_type_btn(lang='uz'):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"{BUTTON_TEXTS['delivery'][lang]}", callback_data="delivery"),
-                InlineKeyboardButton(text=f"{BUTTON_TEXTS['pickup'][lang]}", callback_data="pickup"),
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['delivery'][lang]}", callback_data="DeliveryByCourier"),
+                InlineKeyboardButton(text=f"{BUTTON_TEXTS['pickup'][lang]}", callback_data="DeliveryPickUp"),
             ],
             [
                 InlineKeyboardButton(text=f"{BUTTON_TEXTS['back'][lang]}", callback_data="mycart"),

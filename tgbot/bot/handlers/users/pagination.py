@@ -8,7 +8,7 @@ from asgiref.sync import sync_to_async
 from tgbot.models import OrderItem, Product
 from tgbot.bot.loader import STICERS
 from tgbot.bot.utils.all_texts import REGISTER_TEXTS
-# from data.subloader import get_json
+
 
 router = Router()
 
@@ -28,9 +28,28 @@ async def pagination_handler(call: CallbackQuery, callback_data: fabrics.Product
     caption += f"{REGISTER_TEXTS['description'][user_language]}: {product.description}\n"
     caption += f"{REGISTER_TEXTS['price'][user_language]}: {product.price} UZS \n\n"
     caption += f"{STICERS[count]} x {product.price} = {product.price*count} UZS"
-    # print(caption)
-    with suppress(TelegramBadRequest):
-        await call.message.edit_caption(caption=caption, reply_markup=fabrics.value_compressor(count, pro_id=product_id, ctg_id=product.category_id, lang=user_language))
+    
+
+    if call.message.caption:  
+        await call.message.edit_caption(
+            caption=caption,
+            reply_markup=fabrics.value_compressor(
+                count,
+                pro_id=product_id,
+                ctg_id=product.category_id,
+                lang=user_language
+            )
+        )
+    else:  
+        await call.message.edit_text(
+            text=caption,
+            reply_markup=fabrics.value_compressor(
+                count,
+                pro_id=product_id,
+                ctg_id=product.category_id,
+                lang=user_language
+            )
+        )
     # await call.answer("xatolik!!", show_alert=True)
 
 
@@ -58,5 +77,5 @@ async def change_order_products_value(call: CallbackQuery, callback_data: fabric
     text = await get_cart_items_text(list(enumerate(orderItems, 1)), user_language=user_language)
     # print(text)
     with suppress(TelegramBadRequest):
-        await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1), lang=user_language), orderId))
+        await call.message.edit_text(text, reply_markup=fabrics.change_values(list(enumerate(orderItems, 1)), order_id=orderId, lang=user_language ))
     # await call.answer("xatolik!!", show_alert=True)

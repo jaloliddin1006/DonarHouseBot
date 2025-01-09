@@ -24,3 +24,6 @@ class CreateOrderState(StatesGroup):
     phone = State()
     full_name = State()
     confirm = State()
+    longitude = State()
+    latitude = State()
+    

@@ -86,7 +86,7 @@ async def get_product(call: types.CallbackQuery, state=FSMContext, user_language
             photo = FSInputFile(product.image.path)  
             await call.message.answer_photo(photo=photo, caption=caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
         except Exception as error:
-            await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
+            await call.message.answer(text=caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
     else:
         await call.message.answer(caption, reply_markup=fabrics.value_compressor(1, product.id, product.category_id, user_language))
         
@@ -107,8 +107,8 @@ async def add_cart(call: types.CallbackQuery, callback_data: fabrics.ProductValu
     orderItem.quantity = quantity
     await orderItem.asave()
     
-    await call.message.answer(f"'{product.name}' dan {quantity} tasi  savatga qo'shildi")
-    await call.message.answer(f"{REGISTER_TEXTS['price'].get(user_language)}".format(product=product.name, quantity=quantity), reply_markup=inline.cart_btn(empty=False, lang=user_language))
+    # await call.message.answer(f"'{product.name}' dan {quantity} tasi  savatga qo'shildi")
+    await call.message.answer(f"{REGISTER_TEXTS['added_cart'].get(user_language)}".format(product=product.name, quantity=quantity))
     await categories(call, state=FSMContext)
 
 
@@ -201,13 +201,13 @@ async def create_to_order(call: types.CallbackQuery, state=FSMContext, user_lang
     await state.set_state(CreateOrderState.delivery_type)
     
 
-@router.callback_query(StateFilter(CreateOrderState.delivery_type, F.data in ['pickup', 'delivery']))
+@router.callback_query(StateFilter(CreateOrderState.delivery_type, F.data in ['DeliveryPickUp', 'DeliveryByCourier']))
 async def get_delivery_type(call: types.CallbackQuery, state=FSMContext, user_language: str = 'uz'):
     delivery_type = call.data
     await state.update_data(delivery_type= delivery_type)
     await call.message.delete()
     
-    if delivery_type == 'pickup':
+    if delivery_type == 'DeliveryPickUp':
         branches = await sync_to_async(list)(Branch.objects.filter(is_active=True))
         await call.message.answer(f"{REGISTER_TEXTS['choose_delivery_type'].get(user_language)}", reply_markup=builders.get_brancches_btn(branches, lang=user_language))
         await state.set_state(CreateOrderState.branch)
@@ -224,15 +224,18 @@ async def get_location_func(message: types.Message, state: FSMContext, user_lang
     try:
         address = await get_address(location.latitude, location.longitude)
     except Exception as error:
-        await message.answer(f"{REGISTER_TEXTS['location_error'].get(user_language)}", reply_markup=reply.get_address_btn(user_language))
+        await message.answer(f"{REGISTER_TEXTS['location_error'].get(user_language)} {error}", reply_markup=reply.get_address_btn(user_language))
+        await state.set_state(CreateOrderState.location)
         return True
     
     await state.update_data(
-        location= location_url,
-        address= address
+        location=location_url,
+        address=address,
+        latitude=location.latitude,
+        longitude=location.longitude
     )
     
-    await message.answer(f"{REGISTER_TEXTS['location_error'].get(user_language)}".format(address=address), reply_markup=reply.address_confirmation(user_language))
+    await message.answer(f"{REGISTER_TEXTS['confirm_location'].get(user_language)}".format(address=address), reply_markup=reply.address_confirmation(user_language))
     await state.set_state(CreateOrderState.address)
 
 
@@ -304,7 +307,7 @@ async def get_full_name(message: types.Message, state=FSMContext, user_language:
     
     # print(data)
     text = f"{REGISTER_TEXTS['confirm_order'].get(user_language)}\n\n"
-    if data.get('delivery_type') == 'pickup':
+    if data.get('delivery_type') == 'DeliveryPickUp':
         branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
         text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>{BOT_WORDS['pickup'].get(user_language)}</b>\n"
         text += f"{BOT_WORDS['branch'].get(user_language)}: <a href='{branch.location}'><b>{branch.name}</b></a>\n"
@@ -328,18 +331,20 @@ async def confirm_data_func(message: types.Message, state=FSMContext, user_langu
     
     if message.text in (BUTTON_TEXTS["correct"]['ru'], BUTTON_TEXTS["correct"]['uz']):
         # user = await sync_to_async(User.objects.get)(telegram_id=message.from_user.id)
-        print(data)
+        # print(data)
         orderId = data.get("orderId")
         if data.get('branch'):
             branch = await sync_to_async(Branch.objects.get)(id=data.get('branch'))
         else:
             branch = None
-        print(branch)
+        # print(branch)
         order = await sync_to_async(Order.objects.get)(id=orderId)
         order.branch = branch
         order.delivery = data.get("delivery_type")
         order.address = data.get("address")
         order.location = data.get("location")
+        order.longitude = data.get("longitude")
+        order.latitude = data.get("latitude")
         order.full_name = data.get("full_name")
         order.phone = data.get("phone")
         order.addention = data.get("addention")

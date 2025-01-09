@@ -19,7 +19,7 @@ async def get_cart_items_text(orderItems: list, order: Order = None, user_langua
     if order:
         text += f"{BOT_WORDS['order_info'].get(user_language)}:\n\n"
         text += f"{BOT_WORDS['order_id'].get(user_language)}: <b>#{order.id}</b>\n"
-        if order.delivery == 'pickup':
+        if order.delivery == 'DeliveryPickUp':
             branch = await sync_to_async(Branch.objects.get)(id=order.branch_id)
             
             text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>{BOT_WORDS['pickup'].get(user_language)}</b>\n"

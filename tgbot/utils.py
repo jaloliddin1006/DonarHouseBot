@@ -8,9 +8,13 @@ from tgbot.models import BotAdmin
 async def get_address(latitude, longitude):
     geolocator = Nominatim(user_agent="DonarHouseBot (jmamatmusayev@gmail.com)")
     try:
+        # sync_to_async ishlatiladi, chunki geolocator.reverse sinxron metod
         location = await sync_to_async(geolocator.reverse)(f"{latitude}, {longitude}", language="en")
         return location.address if location else "Address not found"
     except (GeocoderTimedOut, GeocoderInsufficientPrivileges) as e:
+        print(f"Error occurred: {e}")
+        return "Could not retrieve address due to an error."
+    except Exception as e:
         print(f"Error occurred: {e}")
         return "Could not retrieve address due to an error."
     

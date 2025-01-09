@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from environs import Env
-
+from .iiko import *
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,6 +25,7 @@ DB_HOST = env.str("DB_HOST")
 DB_PORT = env.str("DB_PORT")
 
 IS_PRODUCTION=env.bool("IS_PRODUCTION")
+TELEGRAM_GROUP_ID=-4554019429
 
 if IS_PRODUCTION:
     PAYMENT_TOKEN_CLICK = env.str("PAYMENT_TOKEN_CLICK")

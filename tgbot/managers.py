@@ -28,6 +28,12 @@ class OrderItemManager(Manager):
                             output_field=DecimalField(),
                         ))
         )
+    
+    def get_iiko_info(self, order_id):
+        return (self.get_queryset().filter(order_id=order_id)
+                .select_related('product')
+                .values('quantity', 'product__uuid')
+        )
 
 class OrderManager(Manager):
     def user_active_order(self, user):
@@ -46,4 +52,3 @@ class OrderManager(Manager):
                       .select_related('branch')
                       .values('id', 'location', 'full_name', 'phone', 'address', 'addention', 'delivery', 'status', 'branch__name', 'branch__location'))
         return order_full
-        

@@ -5,6 +5,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters.state import StateFilter
 from aiogram.types import InputFile, FSInputFile
 from asgiref.sync import sync_to_async
+from tgbot.bot.handlers.users.iiko_integration import create_order
 from tgbot.bot.handlers.users.utils import get_cart_items_text
 from tgbot.bot.loader import bot, STICERS
 from tgbot.bot.handlers.users.main import my_cart_message
@@ -48,7 +49,7 @@ async def create_invoice(order: Order, isQrCode=None, payment='click'):
         )
         
     
-    if order.delivery == 'pickup':
+    if order.delivery == 'DeliveryPickUp':
         ...
     else:
         prices.append(
@@ -92,7 +93,7 @@ async def get_order_full_info(order_id, user_language='uz'):
     
     # print(order.get("delivery"))
     text = f"{BOT_WORDS['order_info'].get(user_language)}\n\n"
-    if order.delivery == 'pickup':
+    if order.delivery == 'DeliveryPickUp':
         # branch = await sync_to_async(Branch.objects.get)(id=order.branch)
         
         text += f"{BOT_WORDS['order_type'].get(user_language)}: <b>Olib ketish</b>\n"
@@ -150,7 +151,7 @@ async def on_pre_checkout_query( pre_checkout_query: types.PreCheckoutQuery):
 @router.message(F.successful_payment)
 async def process_successful_payment(message: types.Message, user_language: str='uz'):
     print('successful_payment:')
-    GROUP_ID = -4554019429
+    GROUP_ID = settings.TELEGRAM_GROUP_ID
     # print(message.successful_payment)
        
     order_id = message.successful_payment.invoice_payload
@@ -179,6 +180,7 @@ async def process_successful_payment(message: types.Message, user_language: str=
     order.status = 'completed'
     await order.asave() 
     
+    
     orderItems = await sync_to_async(list)(OrderItem.objects.items(cart_id=order.id))
     order_info = await get_cart_items_text(list(enumerate(orderItems, 1)), order, user_language)
     
@@ -200,6 +202,19 @@ async def process_successful_payment(message: types.Message, user_language: str=
                             )
     await message.answer("To'lovingiz qabul qilindi.  \n  Operatorlarimizning siz bilan bog'lanishini kuting. \n 📲 Call-Markaz: +998932977419")
     await message.answer("Asosiy menyu", reply_markup=inline.main_btn(user_language))
+    
+    response = await create_order(order)
+    if response.get("code") == 200:
+        await bot.send_message(chat_id=GROUP_ID,
+                           text=f"Buyurtma IIKO ga muvaffaqiyatli qo'shildi. \nIIKO dagi buyurtma ID {response.get('data').get('orderInfo').get('id')}",     
+                           parse_mode=ParseMode.MARKDOWN                                                         
+                            )
+    else:
+        await bot.send_message(chat_id=GROUP_ID,
+                           text=f"Buyurtma IIKO ga yuborishda muvaffaqiyatsizlikka uchradi. \nIIKO dagi buyurtma ID {response.get('data').get('orderInfo').get('id')}",     
+                           parse_mode=ParseMode.MARKDOWN                                                         
+                            )
+        
     
     
 # @router.pre_checkout_query()

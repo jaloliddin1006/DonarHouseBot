@@ -1,26 +1,24 @@
-import json
 from uuid import UUID
+from django.conf import settings
 from django.core.management.base import BaseCommand
+from tgbot.bot.handlers.users.iiko_integration import get_token
 from tgbot.models import Category
 from django.db import transaction
 import requests
 
 
-BASE_URL = "https://api-ru.iiko.services"
-organization_id = "7d69db4a-90ce-4eba-83e4-5c3a4eec4baf"
-token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcGlMb2dpbklkIjoiZGIzNWQ1Y2MtYTYzZi00NDBkLTg0NzktYzBiN2E3M2IxNzI1IiwibmJmIjoxNzM2MzM4MTQ0LCJleHAiOjE3MzYzNDE3NDQsImlhdCI6MTczNjMzODE0NCwiaXNzIjoiaWlrbyIsImF1ZCI6ImNsaWVudHMifQ.Xofdjix_f10Z6VDSYd3CxpSvgFAMNJZzadrUj7Q34AI"
 
 class Command(BaseCommand):
     help = "Import categories into the database"
         
     def get_nomenclature(self):
-        url = f"{BASE_URL}/api/1/nomenclature"
+        url = f"{settings.IIKO_BASE_URL}/nomenclature"
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {get_token()}",
             "Content-Type": "application/json"
         }
         payload = {
-            "organizationId": organization_id,
+            "organizationId": settings.IIKO_ORGANIZATION_ID,
             "startRevision": 0
         }
         response = requests.post(url, headers=headers, json=payload)
@@ -49,6 +47,7 @@ class Command(BaseCommand):
                     defaults={
                         "order": ctg["order"],
                         "name": ctg["name"],
+                        "name_ru": ctg["name"],
                         "description": ctg.get("description"),
                         "parent": parent,
                         "image": "categories/background.png"
